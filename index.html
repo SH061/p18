@@ -128,6 +128,20 @@
   .modal-error{ color:var(--bad); font-size:12.5px; min-height:16px; margin-top:2px; }
 
   /* 선생님 패널 */
+  /* 반 선택 화면 — 패널 전체(가로·세로) 정중앙에 카드를 띄운다.
+     닫기 버튼은 이 화면에 없으므로(패널을 열면 항상 여기부터 시작) 건드릴
+     대상이 아니다 — 다른 화면(진행 상황/문항별 결과)의 레이아웃과는 무관. */
+  .classpick-center{
+    min-height:calc(100vh - 36px); /* .teacher-panel의 상하 padding(18px*2)만큼 보정 */
+    display:flex; align-items:center; justify-content:center;
+  }
+  .classpick-card{
+    width:100%; max-width:560px; padding:48px 40px; text-align:center;
+  }
+  .classpick-label{ color:var(--muted); margin-bottom:22px; font-size:20px; }
+  .classpick-select{ font-size:20px; padding:16px 14px; }
+  .classpick-btn{ font-size:19px; padding:16px 36px; }
+
   .teacher-panel{
     position:fixed; inset:0; background:var(--bg); z-index:45; overflow-y:auto;
     padding:18px 18px 60px;
@@ -139,6 +153,10 @@
     max-width:900px; margin-left:auto; margin-right:auto;
   }
   .teacher-head{ display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
+  .th-row0{ display:flex; }
+  .th-gate-btn{ width:100%; font-size:14px; padding:10px 12px; }
+  .th-gate-btn.gate-open{ background:rgba(111,191,115,.15); color:var(--ok); border-color:var(--ok); }
+  .th-gate-btn.gate-armed{ background:var(--bad); color:#fff; border-color:var(--bad); }
   .th-row1{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .th-row2{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .th-class-info{ display:flex; align-items:center; gap:6px; color:var(--muted); font-size:13px; font-weight:700; white-space:nowrap; flex-shrink:0; }
@@ -206,15 +224,19 @@
 
   .spotlight-overlay{
     position:fixed; inset:0; background:rgba(4,8,14,.9); z-index:70; display:flex;
-    align-items:center; justify-content:center; padding:30px; opacity:0; pointer-events:none; transition:opacity .2s;
+    align-items:center; justify-content:center; padding:30px; opacity:0; pointer-events:none;
+    transition:opacity .3s; overflow:auto;
   }
   .spotlight-overlay.on{ opacity:1; pointer-events:auto; }
   .spotlight-box{
     background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:40px;
     max-width:800px; width:100%; font-size:clamp(20px, 3.4vw, 32px); line-height:1.6; text-align:center;
-    transform:scale(.92); transition:transform .2s;
+    transform:scale(.5); transition:transform .4s cubic-bezier(.34,1.56,.64,1);
   }
-  .spotlight-overlay.on .spotlight-box{ transform:scale(1); }
+  /* 교실 뒤쪽에서도 보이도록 원래 크기의 250%(2.5배)까지 커지면서 등장한다 —
+     닫힐 때는 다시 이 트랜지션을 타고 작아지며 사라진다(.on 클래스 제거만
+     하면 되므로 별도 닫힘 애니메이션 코드가 필요 없다). */
+  .spotlight-overlay.on .spotlight-box{ transform:scale(2.5); }
   .spotlight-close{ margin-top:24px; }
 
   .correct-reveal{ text-align:center; padding:26px 0; }
@@ -349,18 +371,21 @@
 <div class="teacher-panel hidden" id="teacher-panel">
 
   <!-- 반 선택 화면 — 패널을 열면 항상 이 화면부터 시작한다 -->
-  <div id="teacher-classpick-view">
-    <div class="card" style="max-width:420px; margin:70px auto; text-align:center;">
-      <div style="color:var(--muted); margin-bottom:14px;">확인할 반을 선택하세요</div>
-      <select id="teacher-class-select" class="class-select"></select>
-      <div class="btn-row" style="justify-content:center; margin-top:18px;">
-        <button class="btn" id="btn-teacher-class-confirm">확인</button>
+  <div id="teacher-classpick-view" class="classpick-center">
+    <div class="card classpick-card">
+      <div class="classpick-label">확인할 반을 선택하세요</div>
+      <select id="teacher-class-select" class="class-select classpick-select"></select>
+      <div class="btn-row" style="justify-content:center; margin-top:26px;">
+        <button class="btn classpick-btn" id="btn-teacher-class-confirm">확인</button>
       </div>
     </div>
   </div>
 
   <div id="teacher-main-view" class="hidden">
     <div class="teacher-head">
+      <div class="th-row0">
+        <button class="btn secondary th-gate-btn" id="btn-gate-toggle">🔒 학생 접속: 닫힘 (누르면 열기)</button>
+      </div>
       <div class="th-row1">
         <div class="teacher-tabs">
           <button class="ttab active" data-tab="progress" id="tab-progress">진행 상황</button>
@@ -412,12 +437,23 @@
 
 <script>
 /* ============================================================
-   접속 시간 검증 게이트 — 수업 시간에만 학생이 들어올 수 있게 한다.
-   URL에 ?t 파라미터가 있으면(선생님 수업 준비·테스트용) 이 검증을
-   완전히 건너뛴다. 기기 시계는 학생이 조작할 수 있으므로 반드시
-   외부 시간 서버(worldtimeapi)에서 받아온 실제 한국 시간으로 판단한다.
+   활동마다 반드시 새로 채워 넣을 값 — 예전 활동 주소를 재사용하지 말 것.
+   (접속 스위치 게이트가 이 값을 바로 써야 해서 예전보다 앞으로 옮겼다.)
    ============================================================ */
-(function timeGate(){
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyKLmeIStbA3MPJI8xN4wGEuqjR5K2DvpvWVlxQb3EkGxvBY_H4J93OB8XlHYFFYXan/exec";
+function gasConfigured(){ return !!GAS_URL && GAS_URL.indexOf("PASTE_YOUR_") !== 0; }
+
+const TEACHER_PASSCODE = "3699";
+
+/* ============================================================
+   접속 제어 게이트 — 선생님이 켜고 끄는 스위치로 학생 접속을 막는다.
+   URL에 ?t 파라미터가 있으면(선생님용 링크) 이 검증을 완전히 건너뛴다.
+   't'가 없는 학생은 Apps Script의 접속설정 시트(TRUE/FALSE) 값을 확인해서
+   꺼져 있으면 안내 후 구글로 이동시키고, 켜져 있으면 화면을 보여준다.
+   이미 화면을 쓰고 있는 도중에도 5초마다 다시 확인해서, 선생님이 접속을
+   닫으면 곧바로(최대 5초 이내) 차단한다.
+   ============================================================ */
+(function accessGate(){
   const params = new URLSearchParams(window.location.search);
   const teacherBypass = params.has('t');
 
@@ -436,64 +472,37 @@
     return;
   }
 
-  // 요일(0=일 ~ 6=토)과 시:분을 받아 지금이 허용된 교시 시간인지 판단한다.
-  function isSchoolTime(dow, hh, mm){
-    if(dow === 0 || dow === 6) return false; // 주말은 무조건 차단
-    const t = hh*60 + mm;
-    const within = (sh,sm,eh,em)=> t >= sh*60+sm && t <= eh*60+em;
-    // 1~5교시 — 월~금 공통 (점심시간 12:50~14:00은 자동으로 차단됨)
-    if(within(9,0, 9,50)) return true;   // 1교시
-    if(within(10,0, 10,50)) return true; // 2교시
-    if(within(11,0, 11,50)) return true; // 3교시
-    if(within(12,0, 12,50)) return true; // 4교시
-    if(within(14,0, 14,50)) return true; // 5교시
-    // 6~7교시 — 요일별 규칙
-    if(dow===1 || dow===4 || dow===5){ // 월, 목, 금
-      if(within(15,0, 15,50)) return true;  // 6교시 (청소시간 15:50~16:10 차단)
-      if(within(16,10, 17,0)) return true;  // 7교시
-    } else if(dow===2){ // 화요일 — 청소·동아리 시간 고려해 연속 허용
-      if(within(15,10, 17,0)) return true;
-    } else if(dow===3){ // 수요일 — 6교시까지만 (7교시 없음)
-      if(within(15,0, 15,50)) return true;
+  async function fetchGateOpen(){
+    if(!gasConfigured()) return false; // 안전하게 차단
+    try{
+      const res = await fetch(GAS_URL + "?action=gateStatus");
+      if(!res.ok) return false;
+      const data = await res.json();
+      return !!(data && data.open === true);
+    }catch(e){
+      // 서버 확인 자체가 안 되면(네트워크 오류 등) 안전하게 차단한다 —
+      // 확인 안 된 상태를 "통과"로 처리하면 우회 구멍이 생긴다.
+      return false;
     }
-    return false;
   }
 
-  fetch('https://worldtimeapi.org/api/timezone/Asia/Seoul')
-    .then(res=>{
-      if(!res.ok) throw new Error('시간 서버 응답 오류');
-      return res.json();
-    })
-    .then(data=>{
-      // day_of_week: 0(일)~6(토). datetime 문자열은 이미 KST(+09:00) 벽시계
-      // 시각이므로, Date 객체로 만들어 브라우저 로컬 타임존으로 다시 해석하지
-      // 않고 문자열에서 시:분을 직접 뽑아 쓴다 — 기기의 타임존 설정 자체를
-      // 조작하는 경우까지 대비하기 위함이다.
-      const dow = data.day_of_week;
-      const m = String(data.datetime).match(/T(\d{2}):(\d{2}):/);
-      if(!m){ blockAccess('시간을 확인할 수 없어요. 선생님께 문의해 주세요.'); return; }
-      const hh = parseInt(m[1], 10);
-      const mm = parseInt(m[2], 10);
-      if(isSchoolTime(dow, hh, mm)){
-        revealApp();
-      } else {
+  (async ()=>{
+    const open = await fetchGateOpen();
+    if(!open){
+      blockAccess('현재는 수업 시간이 아닙니다.');
+      return;
+    }
+    revealApp();
+    // 이미 들어와 있는 학생도 5초마다 다시 확인해서, 선생님이 접속을
+    // 닫으면 그 안에(최대 5초) 자동으로 차단한다.
+    setInterval(async ()=>{
+      const stillOpen = await fetchGateOpen();
+      if(!stillOpen){
         blockAccess('현재는 수업 시간이 아닙니다.');
       }
-    })
-    .catch(()=>{
-      // 시간 서버를 확인할 수 없으면(네트워크 오류 등) 시계 조작으로 인한
-      // 우회를 막기 위해 안전하게 접속을 차단한다 — 허용하지 않는다.
-      blockAccess('시간을 확인할 수 없어요. 선생님께 문의해 주세요.');
-    });
+    }, 5000);
+  })();
 })();
-
-/* ============================================================
-   활동마다 반드시 새로 채워 넣을 값 — 예전 활동 주소를 재사용하지 말 것.
-   ============================================================ */
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyKLmeIStbA3MPJI8xN4wGEuqjR5K2DvpvWVlxQb3EkGxvBY_H4J93OB8XlHYFFYXan/exec";
-function gasConfigured(){ return !!GAS_URL && GAS_URL.indexOf("PASTE_YOUR_") !== 0; }
-
-const TEACHER_PASSCODE = "3699";
 
 /* ============================================================
    문항 데이터 — 학습지 "산화와 환원"에서 추출
@@ -931,6 +940,7 @@ document.getElementById("btn-teacher-class-confirm").addEventListener("click", (
   document.getElementById("teacher-main-view").classList.remove("hidden");
   switchTeacherTab("progress");
   loadTeacherData();
+  fetchGateStatusForTeacher();
 });
 document.getElementById("btn-teacher-change-class").addEventListener("click", ()=>{
   document.getElementById("teacher-classpick-view").classList.remove("hidden");
@@ -941,7 +951,7 @@ document.getElementById("btn-teacher-close").addEventListener("click", ()=>{
 });
 document.getElementById("tab-progress").addEventListener("click", ()=>switchTeacherTab("progress"));
 document.getElementById("tab-results").addEventListener("click", ()=>switchTeacherTab("results"));
-document.getElementById("btn-teacher-refresh").addEventListener("click", loadTeacherData);
+document.getElementById("btn-teacher-refresh").addEventListener("click", ()=>{ loadTeacherData(); fetchGateStatusForTeacher(); });
 
 let resetArmed = false, resetArmTimer = null;
 document.getElementById("btn-teacher-reset").addEventListener("click", ()=>{
@@ -970,6 +980,72 @@ async function runResetAll(){
   btn.disabled = false; btn.textContent = "🗑 전체 초기화";
   loadTeacherData();
 }
+
+/* ============================================================
+   학생 접속 스위치 — 선생님이 직접 켜고 끈다.
+   닫힘→열림은 한 번에, 열림→닫힘은 실수 방지를 위해 두 번 눌러야 한다
+   (전체 초기화 버튼과 같은 확인 패턴).
+   ============================================================ */
+let gateOpenState = false;
+let gateArmed = false, gateArmTimer = null;
+
+function renderGateButton(){
+  const btn = document.getElementById("btn-gate-toggle");
+  clearTimeout(gateArmTimer);
+  gateArmed = false;
+  btn.classList.remove("gate-armed");
+  if(gateOpenState){
+    btn.classList.add("gate-open");
+    btn.textContent = "🔓 학생 접속: 열림 (누르면 닫기)";
+  } else {
+    btn.classList.remove("gate-open");
+    btn.textContent = "🔒 학생 접속: 닫힘 (누르면 열기)";
+  }
+}
+
+async function fetchGateStatusForTeacher(){
+  if(!gasConfigured()) return;
+  try{
+    const res = await fetch(GAS_URL + "?action=gateStatus");
+    const data = await res.json();
+    gateOpenState = !!(data && data.open === true);
+  }catch(e){ /* 실패하면 화면에 표시된 마지막 상태를 그대로 둔다 */ }
+  renderGateButton();
+}
+
+async function setGateOpenState(open){
+  if(!gasConfigured()) return;
+  const btn = document.getElementById("btn-gate-toggle");
+  btn.disabled = true;
+  try{
+    await fetch(GAS_URL + "?action=setGate&value=" + (open ? "true" : "false"), { method: "GET" });
+    gateOpenState = open;
+  }catch(e){ /* 실패해도 조용히 넘어가고 실제 상태를 다시 조회해서 보여준다 */ }
+  btn.disabled = false;
+  renderGateButton();
+  fetchGateStatusForTeacher();
+}
+
+document.getElementById("btn-gate-toggle").addEventListener("click", ()=>{
+  const btn = document.getElementById("btn-gate-toggle");
+  if(!gateOpenState){
+    // 닫힘 → 열림은 바로 실행
+    setGateOpenState(true);
+    return;
+  }
+  if(!gateArmed){
+    // 열림 → 닫힘은 한 번 더 눌러야 한다
+    gateArmed = true;
+    btn.textContent = "정말요? 다시 누르면 닫힘";
+    btn.classList.add("gate-armed");
+    clearTimeout(gateArmTimer);
+    gateArmTimer = setTimeout(()=>{ gateArmed=false; renderGateButton(); }, 4000);
+    return;
+  }
+  clearTimeout(gateArmTimer);
+  gateArmed = false;
+  setGateOpenState(false);
+});
 
 function switchTeacherTab(tab){
   teacherTab = tab;
@@ -1212,6 +1288,12 @@ function openSpotlight(text){
 }
 document.getElementById('btn-spotlight-close').addEventListener('click', ()=>{
   document.getElementById('spotlight-overlay').classList.remove('on');
+});
+// 배경(카드·닫기 버튼이 아닌 어두운 바깥 영역) 클릭으로도 닫히게 한다.
+document.getElementById('spotlight-overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'spotlight-overlay'){
+    document.getElementById('spotlight-overlay').classList.remove('on');
+  }
 });
 
 /* --- 토스트(선택 사항, 저장 성공시 조용히 표시하고 싶을 때 사용) --- */
