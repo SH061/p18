@@ -1,0 +1,1196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수업내용 확인하기! - 산화와 환원</title>
+<style>
+  :root{
+    --bg:#0e1620; --panel:#152232; --panel-2:#1c2c40; --line:#2a3d55;
+    --text:#eaf1fb; --muted:#8fa3bd;
+    --accent:#4fb6a8; --accent-2:#e3a23d;
+    --ok:#6fbf73; --bad:#d5566b; --info:#5b8fd6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:
+      radial-gradient(circle at 15% 0%, #16324a 0%, transparent 45%),
+      radial-gradient(circle at 85% 100%, #2a1c3a 0%, transparent 45%),
+      var(--bg);
+    color:var(--text); font-family:'Noto Sans KR', sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .num, .formula{ font-family:'Space Grotesk','Noto Sans KR', sans-serif; }
+  header.top{
+    position:relative;
+    width:100%; max-width:720px; padding:10px 84px 8px 14px; text-align:center;
+  }
+  .title-line{ display:flex; align-items:baseline; justify-content:center; gap:8px; flex-wrap:wrap; }
+  header.top h1{ margin:0; font-size:22px; letter-spacing:.02em; }
+  header.top .topic{ margin-top:0; color:var(--accent-2); font-size:15px; font-weight:600; }
+  .conn-row{
+    position:absolute; top:10px; right:8px; display:flex; flex-direction:column; gap:4px; align-items:flex-end;
+  }
+  .conn-badge{
+    display:inline-flex; align-items:center; gap:4px; font-size:9px; padding:3px 7px;
+    border-radius:999px; background:var(--panel-2); color:var(--muted); border:1px solid var(--line);
+    white-space:nowrap;
+  }
+  .conn-badge i{ width:5px; height:5px; border-radius:50%; background:var(--muted); display:inline-block; }
+  .conn-badge.conn-ok{ color:var(--ok); background:rgba(111,191,115,.12); }
+  .conn-badge.conn-ok i{ background:var(--ok); }
+  .conn-badge.conn-bad{ color:var(--bad); background:rgba(213,86,107,.12); }
+  .conn-badge.conn-bad i{ background:var(--bad); }
+  .conn-detail{ font-size:9.5px; color:var(--bad); text-align:center; margin-top:4px; }
+  .hidden{ display:none !important; }
+
+  main{ width:100%; max-width:720px; padding:14px 18px 100px; flex:1; }
+  .screen{ display:none; }
+  .screen.on{ display:block; }
+
+  .card{
+    background:linear-gradient(180deg, var(--panel), var(--panel-2));
+    border:1px solid var(--line); border-radius:16px; padding:22px;
+    box-shadow:0 10px 30px rgba(0,0,0,.25);
+  }
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .field input[type=text]{
+    width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); color:var(--text); font-size:15px;
+  }
+  .class-select, .field select{
+    width:100%; padding:12px 10px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); color:var(--text); font-size:15px;
+  }
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    padding:12px 20px; border-radius:12px; border:none; cursor:pointer;
+    background:var(--accent); color:#06231f; font-weight:700; font-size:15px;
+  }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn.secondary{ background:var(--panel-2); color:var(--text); border:1px solid var(--line); }
+  .btn-row{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+  .progress-wrap{ margin-bottom:16px; }
+  .progress-label{ font-size:12px; color:var(--muted); margin-bottom:6px; text-align:right; }
+  .ptrack{ height:8px; border-radius:5px; background:var(--panel-2); overflow:hidden; border:1px solid var(--line); }
+  .pfill{ height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius:5px; transition:width .3s; }
+
+  .q-image{ width:100%; border-radius:12px; margin:14px 0; background:#fff; padding:8px; }
+  .q-image.q-image-small{ width:96%; margin-left:auto; margin-right:auto; display:block; }
+  .q-text{ font-size:17px; line-height:1.6; white-space:pre-line; }
+  .q-note{
+    margin-top:12px; padding:12px 14px; border-radius:10px; background:var(--panel);
+    border:1px solid var(--line); font-size:14.5px; line-height:1.6; white-space:pre-line; color:var(--muted);
+  }
+  .options{ display:grid; grid-template-columns:repeat(var(--n-options, 2), 1fr); gap:6px; margin-top:18px; }
+  .opt-btn{
+    padding:12px 4px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); color:var(--text); font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .opt-btn.picked{ background:var(--accent); color:#06231f; border-color:var(--accent); }
+  .blank-input{
+    width:100%; margin-top:16px; padding:14px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel); color:var(--text); font-size:16px;
+  }
+  textarea.blank-input{ min-height:120px; resize:vertical; font-family:inherit; }
+
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ok); color:#06231f; padding:10px 18px; border-radius:999px; font-weight:700;
+    opacity:0; transition:all .25s; pointer-events:none; z-index:60;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* 선생님 보기 버튼 + 암호 모달 */
+  .teacher-toggle{
+    position:fixed; right:16px; bottom:16px; z-index:40;
+    padding:12px 16px; border-radius:999px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--text); font-weight:700; cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(4,8,14,.72); display:flex; align-items:center;
+    justify-content:center; z-index:50; padding:16px;
+  }
+  .modal-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px;
+    width:100%; max-width:320px; text-align:center;
+  }
+  .modal-card .micon{ font-size:28px; margin-bottom:6px; }
+  .modal-card input{
+    width:100%; margin:14px 0; padding:12px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-2); color:var(--text); font-size:20px; text-align:center; letter-spacing:.3em;
+  }
+  .modal-btns{ display:flex; gap:10px; }
+  .modal-btns button{ flex:1; }
+  .modal-error{ color:var(--bad); font-size:12.5px; min-height:16px; margin-top:2px; }
+
+  /* 선생님 패널 */
+  .teacher-panel{
+    position:fixed; inset:0; background:var(--bg); z-index:45; overflow-y:auto;
+    padding:18px 18px 60px;
+  }
+  /* 넓은 데스크톱/프로젝터 화면에서 카드·그림이 한없이 커지지 않도록 폭을 제한한다.
+     이게 없으면 이미지가 width:100%를 그대로 따라가 화면 전체 너비만큼 커져서,
+     문제 카드가 세로로 너무 길어지고 아래 결과 영역이 화면 밖으로 밀려난다. */
+  .teacher-head, #teacher-progress-view, #teacher-results-view{
+    max-width:900px; margin-left:auto; margin-right:auto;
+  }
+  .teacher-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+  .teacher-tabs{ display:flex; gap:8px; }
+  .ttab{
+    padding:8px 14px; border-radius:999px; border:1px solid var(--line); background:var(--panel-2);
+    color:var(--muted); cursor:pointer; font-size:13.5px; font-weight:700;
+  }
+  .ttab.active{ background:var(--accent); color:#06231f; border-color:var(--accent); }
+  .close-teacher{ background:none; border:none; color:var(--muted); font-size:22px; cursor:pointer; }
+  #btn-teacher-reset.danger{ background:var(--bad); color:#fff; border-color:var(--bad); }
+  /* 선생님 화면의 문항 그림은 항상 이 크기로 — 학생 화면(q-image)과 별개로,
+     넓은 화면에서 그림이 문제/버튼을 밀어내지 않도록 고정 비율로 줄인다.
+     ID 선택자라 .q-image의 width:100%보다 우선 적용된다. */
+  #tq-image{ width:65%; margin:14px auto; display:block; }
+  /* 기출문제처럼 세로로 긴 이미지는 일반 그림보다 한 단계 더 줄여야
+     문제·탭·버튼까지 한 화면에 들어온다 (ID+클래스 조합이라 위 규칙보다
+     우선 적용됨). */
+  #tq-image.q-image-small{ width:40%; }
+  /* 그림을 줄인 만큼, 교사 화면(프로젝터)의 글자는 상대적으로 더 크게 —
+     뒷자리에서도 읽혀야 하고, 그림보다 글자 비중이 작아 보이던 문제 개선. */
+  #tq-text{ font-size:20px; }
+  #tq-note{ font-size:16.5px; }
+
+  .stu-grid{ display:flex; flex-direction:column; gap:8px; }
+  .stu-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:12px 14px; border-radius:12px; background:var(--panel); border:1px solid var(--line);
+  }
+  .stu-name{ font-weight:700; }
+  .stu-meta{ display:flex; align-items:center; gap:12px; }
+  .stu-bar{ width:110px; height:8px; border-radius:5px; background:var(--panel-2); overflow:hidden; border:1px solid var(--line); }
+  .stu-bar i{ display:block; height:100%; background:linear-gradient(90deg, var(--accent), var(--accent-2)); }
+  .stu-count{ font-size:12.5px; color:var(--muted); min-width:56px; text-align:right; }
+  .stu-acc{ font-size:12.5px; color:var(--info); min-width:56px; text-align:right; }
+  .empty-note{ color:var(--muted); text-align:center; padding:30px 0; }
+
+  .qnav{ display:flex; align-items:center; justify-content:space-between; margin:10px 0 18px; gap:10px; }
+  .qnav .qn-label{ font-weight:700; color:var(--muted); font-size:13px; }
+
+  .result-tabs{ display:flex; gap:8px; margin-bottom:14px; }
+  .rtab{
+    padding:9px 16px; border-radius:10px 10px 0 0; border:1px solid var(--line); border-bottom:none;
+    background:var(--panel-2); color:var(--muted); cursor:pointer; font-weight:700; font-size:14px;
+  }
+  .rtab.active{ background:var(--panel); color:var(--text); }
+  .result-body{ background:var(--panel); border:1px solid var(--line); border-radius:0 12px 12px 12px; padding:20px; }
+
+  .pie-wrap{ display:flex; align-items:center; gap:26px; flex-wrap:wrap; justify-content:center; padding:10px 0; }
+  .pie{ width:200px; height:200px; border-radius:50%; flex-shrink:0; }
+  .legend{ display:flex; flex-direction:column; gap:8px; }
+  .legend-item{ display:flex; align-items:center; gap:8px; font-size:14.5px; }
+  .legend-swatch{ width:12px; height:12px; border-radius:3px; }
+  .no-response{ text-align:center; color:var(--muted); padding:20px; }
+
+  .answer-cards{ display:flex; flex-direction:column; gap:10px; }
+  .answer-card{
+    padding:14px 16px; border-radius:10px; background:var(--panel-2); border:1px solid var(--line);
+    cursor:pointer; font-size:14.5px; line-height:1.5;
+  }
+  .answer-card:hover{ border-color:var(--accent); }
+
+  .spotlight-overlay{
+    position:fixed; inset:0; background:rgba(4,8,14,.9); z-index:70; display:flex;
+    align-items:center; justify-content:center; padding:30px; opacity:0; pointer-events:none; transition:opacity .2s;
+  }
+  .spotlight-overlay.on{ opacity:1; pointer-events:auto; }
+  .spotlight-box{
+    background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:40px;
+    max-width:800px; width:100%; font-size:clamp(20px, 3.4vw, 32px); line-height:1.6; text-align:center;
+    transform:scale(.92); transition:transform .2s;
+  }
+  .spotlight-overlay.on .spotlight-box{ transform:scale(1); }
+  .spotlight-close{ margin-top:24px; }
+
+  .correct-reveal{ text-align:center; padding:26px 0; }
+  .correct-reveal .big{ font-size:40px; font-weight:800; color:var(--accent-2); margin-top:6px; }
+
+  /* 시간 검증 게이트 */
+  #app-root.hidden{ display:none; }
+  #gate-overlay{
+    position:fixed; inset:0; background:var(--bg); z-index:100;
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:20px;
+  }
+  #gate-overlay.hidden{ display:none; }
+  #gate-message{ color:var(--muted); font-size:16px; }
+</style>
+</head>
+<body>
+
+<!-- 시간 검증 게이트 — 확인 전까지는 이 화면만 보인다 -->
+<div id="gate-overlay">
+  <div id="gate-message">시간을 확인하고 있어요…</div>
+</div>
+
+<div id="app-root" class="hidden">
+
+<header class="top">
+  <div class="title-line">
+    <h1>수업내용 확인하기!</h1>
+    <div class="topic">산화와 환원(1)</div>
+  </div>
+  <div class="conn-row">
+    <span class="conn-badge" id="conn-status"><i></i> 연결 확인 중…</span>
+    <span class="conn-badge" id="net-status"><i></i> 인터넷 확인 중…</span>
+  </div>
+  <div class="conn-detail hidden" id="conn-detail"></div>
+</header>
+
+<main>
+
+  <!-- 이름 입력 화면 -->
+  <section class="screen on" id="screen-intro">
+    <div class="card">
+      <div class="field" style="display:flex; gap:10px; align-items:flex-end;">
+        <div style="flex:0 0 96px;">
+          <label>반</label>
+          <select id="input-class" class="class-select"></select>
+        </div>
+        <div style="flex:1;">
+          <label>학번 · 이름을 입력해 주세요</label>
+          <input type="text" id="input-name" placeholder="예: 10203 김학생">
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="btn-start">시작하기</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 문항 화면 -->
+  <section class="screen" id="screen-question">
+    <div class="progress-wrap">
+      <div class="progress-label" id="q-progress-label">문항 1 / 19</div>
+      <div class="ptrack"><div class="pfill" id="q-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="q-text" id="q-text"></div>
+      <img class="q-image hidden" id="q-image">
+      <div class="q-note hidden" id="q-note"></div>
+      <div class="options hidden" id="q-options"></div>
+      <input type="text" class="blank-input hidden" id="q-blank-input" placeholder="답을 입력하세요">
+      <textarea class="blank-input hidden" id="q-short-input" placeholder="생각을 자유롭게 적어 주세요"></textarea>
+      <div class="btn-row" style="justify-content:space-between;">
+        <button class="btn secondary" id="btn-prev">◀ 이전 문항</button>
+        <button class="btn" id="btn-next" disabled>다음</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 성찰 질문 화면 -->
+  <section class="screen" id="screen-reflect">
+    <div class="progress-wrap">
+      <div class="progress-label" id="r-progress-label">성찰 질문 1 / 3</div>
+      <div class="ptrack"><div class="pfill" id="r-progress-fill" style="width:0%"></div></div>
+    </div>
+    <div class="card">
+      <div class="q-text" id="r-text"></div>
+      <textarea class="blank-input" id="r-input" placeholder="자유롭게 적어 주세요 (10자 이상)"></textarea>
+      <div class="btn-row" style="justify-content:space-between;">
+        <button class="btn secondary" id="btn-reflect-prev">◀ 이전</button>
+        <button class="btn" id="btn-reflect-next" disabled>다음</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 완료 화면 -->
+  <section class="screen" id="screen-complete">
+    <div class="card" style="text-align:center;">
+      <div style="font-size:40px;">✅</div>
+      <h2>고생했어요!</h2>
+      <p style="color:var(--muted);">오늘 활동과 방금 남긴 생각까지 선생님께 잘 전달됐어요.</p>
+    </div>
+  </section>
+
+</main>
+
+<button class="teacher-toggle" id="btn-teacher-toggle">🧑‍🏫 선생님 보기</button>
+
+<div class="modal-backdrop hidden" id="teacher-gate-modal">
+  <div class="modal-card">
+    <div class="micon">🔒</div>
+    <h3 style="margin:4px 0;">선생님 암호</h3>
+    <input id="teacher-gate-input" type="password" inputmode="numeric" maxlength="8" placeholder="••••">
+    <div class="modal-error" id="teacher-gate-error"></div>
+    <div class="modal-btns">
+      <button class="btn secondary" id="teacher-gate-cancel">취소</button>
+      <button class="btn" id="teacher-gate-confirm">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 선생님 패널 -->
+<div class="teacher-panel hidden" id="teacher-panel">
+
+  <!-- 반 선택 화면 — 패널을 열면 항상 이 화면부터 시작한다 -->
+  <div id="teacher-classpick-view">
+    <div class="card" style="max-width:420px; margin:70px auto; text-align:center;">
+      <div style="color:var(--muted); margin-bottom:14px;">확인할 반을 선택하세요</div>
+      <select id="teacher-class-select" class="class-select"></select>
+      <div class="btn-row" style="justify-content:center; margin-top:18px;">
+        <button class="btn" id="btn-teacher-class-confirm">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="teacher-main-view" class="hidden">
+    <div class="teacher-head">
+      <div class="teacher-tabs">
+        <button class="ttab active" data-tab="progress" id="tab-progress">진행 상황</button>
+        <button class="ttab" data-tab="results" id="tab-results">문항별 결과</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="teacher-current-class" style="color:var(--muted); font-size:13px;"></span>
+        <button class="btn secondary" id="btn-teacher-change-class" style="padding:8px 14px; font-size:13px;">반 변경</button>
+        <button class="btn secondary" id="btn-teacher-refresh" style="padding:8px 14px; font-size:13px;">↻ 새로고침</button>
+        <button class="btn secondary" id="btn-teacher-reset" style="padding:8px 14px; font-size:13px;">🗑 전체 초기화</button>
+        <button class="close-teacher" id="btn-teacher-close">✕</button>
+      </div>
+    </div>
+
+    <div id="teacher-progress-view">
+    <div id="teacher-progress-body"><div class="empty-note">불러오는 중…</div></div>
+  </div>
+
+  <div id="teacher-results-view" class="hidden">
+    <div class="qnav">
+      <button class="btn secondary" id="btn-tq-prev">◀ 이전 문항</button>
+      <div class="qn-label" id="tq-label">문항 1 / 22</div>
+      <button class="btn secondary" id="btn-tq-next">다음 문항 ▶</button>
+    </div>
+    <div class="card">
+      <div class="q-text" id="tq-text"></div>
+      <img class="q-image hidden" id="tq-image">
+      <div class="q-note hidden" id="tq-note"></div>
+    </div>
+    <div id="tq-result-area" style="margin-top:16px;"></div>
+  </div>
+  </div>
+</div>
+
+<div class="spotlight-overlay" id="spotlight-overlay">
+  <div>
+    <div class="spotlight-box" id="spotlight-text"></div>
+    <div style="text-align:center;"><button class="btn secondary spotlight-close" id="btn-spotlight-close">닫기</button></div>
+  </div>
+</div>
+
+</div><!-- /#app-root -->
+
+<script>
+/* ============================================================
+   접속 시간 검증 게이트 — 수업 시간에만 학생이 들어올 수 있게 한다.
+   URL에 ?t 파라미터가 있으면(선생님 수업 준비·테스트용) 이 검증을
+   완전히 건너뛴다. 기기 시계는 학생이 조작할 수 있으므로 반드시
+   외부 시간 서버(worldtimeapi)에서 받아온 실제 한국 시간으로 판단한다.
+   ============================================================ */
+(function timeGate(){
+  const params = new URLSearchParams(window.location.search);
+  const teacherBypass = params.has('t');
+
+  function revealApp(){
+    document.getElementById('gate-overlay').classList.add('hidden');
+    document.getElementById('app-root').classList.remove('hidden');
+  }
+  function blockAccess(message){
+    document.getElementById('gate-message').textContent = message;
+    alert(message);
+    window.location.href = 'https://www.google.com';
+  }
+
+  if(teacherBypass){
+    revealApp();
+    return;
+  }
+
+  // 요일(0=일 ~ 6=토)과 시:분을 받아 지금이 허용된 교시 시간인지 판단한다.
+  function isSchoolTime(dow, hh, mm){
+    if(dow === 0 || dow === 6) return false; // 주말은 무조건 차단
+    const t = hh*60 + mm;
+    const within = (sh,sm,eh,em)=> t >= sh*60+sm && t <= eh*60+em;
+    // 1~5교시 — 월~금 공통 (점심시간 12:50~14:00은 자동으로 차단됨)
+    if(within(9,0, 9,50)) return true;   // 1교시
+    if(within(10,0, 10,50)) return true; // 2교시
+    if(within(11,0, 11,50)) return true; // 3교시
+    if(within(12,0, 12,50)) return true; // 4교시
+    if(within(14,0, 14,50)) return true; // 5교시
+    // 6~7교시 — 요일별 규칙
+    if(dow===1 || dow===4 || dow===5){ // 월, 목, 금
+      if(within(15,0, 15,50)) return true;  // 6교시 (청소시간 15:50~16:10 차단)
+      if(within(16,10, 17,0)) return true;  // 7교시
+    } else if(dow===2){ // 화요일 — 청소·동아리 시간 고려해 연속 허용
+      if(within(15,10, 17,0)) return true;
+    } else if(dow===3){ // 수요일 — 6교시까지만 (7교시 없음)
+      if(within(15,0, 15,50)) return true;
+    }
+    return false;
+  }
+
+  fetch('https://worldtimeapi.org/api/timezone/Asia/Seoul')
+    .then(res=>{
+      if(!res.ok) throw new Error('시간 서버 응답 오류');
+      return res.json();
+    })
+    .then(data=>{
+      // day_of_week: 0(일)~6(토). datetime 문자열은 이미 KST(+09:00) 벽시계
+      // 시각이므로, Date 객체로 만들어 브라우저 로컬 타임존으로 다시 해석하지
+      // 않고 문자열에서 시:분을 직접 뽑아 쓴다 — 기기의 타임존 설정 자체를
+      // 조작하는 경우까지 대비하기 위함이다.
+      const dow = data.day_of_week;
+      const m = String(data.datetime).match(/T(\d{2}):(\d{2}):/);
+      if(!m){ blockAccess('시간을 확인할 수 없어요. 선생님께 문의해 주세요.'); return; }
+      const hh = parseInt(m[1], 10);
+      const mm = parseInt(m[2], 10);
+      if(isSchoolTime(dow, hh, mm)){
+        revealApp();
+      } else {
+        blockAccess('현재는 수업 시간이 아닙니다.');
+      }
+    })
+    .catch(()=>{
+      // 시간 서버를 확인할 수 없으면(네트워크 오류 등) 시계 조작으로 인한
+      // 우회를 막기 위해 안전하게 접속을 차단한다 — 허용하지 않는다.
+      blockAccess('시간을 확인할 수 없어요. 선생님께 문의해 주세요.');
+    });
+})();
+
+/* ============================================================
+   활동마다 반드시 새로 채워 넣을 값 — 예전 활동 주소를 재사용하지 말 것.
+   ============================================================ */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyKLmeIStbA3MPJI8xN4wGEuqjR5K2DvpvWVlxQb3EkGxvBY_H4J93OB8XlHYFFYXan/exec";
+function gasConfigured(){ return !!GAS_URL && GAS_URL.indexOf("PASTE_YOUR_") !== 0; }
+
+const TEACHER_PASSCODE = "3699";
+
+/* ============================================================
+   문항 데이터 — 학습지 "산화와 환원"에서 추출
+   ============================================================ */
+const QUESTIONS = [
+  { id:"q1", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"[개념 체크] 다음은 지구와 생명의 역사에 영향을 준 반응이다.\n(가) 화석 연료의 연소  (나) 철의 제련  (다) 광합성  (라) 세포호흡\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.\n\n모두 산소가 관여하는 산화 환원 반응이다." },
+  { id:"q2", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"광합성에서 이산화 탄소는 환원된다." },
+  { id:"q3", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"화석 연료의 연소에서 연료는 산화된다." },
+  { id:"q4", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"철의 제련에서 산화 철은 철로 환원된다." },
+  { id:"q5", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"산소를 잃는 반응과 얻는 반응은 동시에 일어난다." },
+
+  { id:"q6", type:"blank", correctAnswer:"산소",
+    text:"( ) 안에 공통으로 들어갈 알맞은 기체의 이름을 쓰시오.",
+    note:"· 식물이 광합성을 하면서 이산화 탄소와 물로부터 포도당과 (   )을/를 만든다.\n· 물질이 대기 중의 (   )와/과 빠르게 반응하며 연소한다." },
+  { id:"q7", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"①",
+    text:"철의 제련에 대한 설명으로 옳은 것은?",
+    note:"① 철의 제련 과정에 산소가 관여한다.\n② 철의 제련 과정에서 철이 산화 철로 변한다.\n③ 인류는 제련한 철을 이용하며 청동기 시대를 열었다.\n④ 자연 상태에서 철은 이산화 탄소와 결합한 형태로 존재한다.\n⑤ 자연 상태에서 얻은 철을 산업, 건축 등에 그대로 사용할 수 있다." },
+
+  { id:"q7a", type:"short", correctAnswer:"",
+    text:"[구리판의 변화 해석하기] 다음 (가), (나)는 구리판을 알코올램프의 불꽃에 넣어 가열하는 실험이다.\n(가)와 (나)에서 불꽃에 닿은 부분의 변화를 관찰한 내용을 서술하시오.",
+    image:"images/copper-ab.png",
+    sampleAnswer:"(가)에서 붉은색의 구리판이 검은색으로 변하고, (나)에서 검은색으로 변한 구리판이 다시 붉은색으로 변한다." },
+  { id:"q7b", type:"short", correctAnswer:"",
+    text:"알코올램프의 겉불꽃과 속불꽃은 각각 다른 특징이 있다. 과정 1에서 관찰한 변화가 나타나는 까닭을 겉불꽃 또는 속불꽃의 특징과 관련지어 서술하시오.",
+    image:"images/copper-ab.png",
+    sampleAnswer:"· (가): 겉불꽃은 산소가 잘 공급되므로 구리가 산소와 반응한다. 따라서 구리가 산소를 얻어 산화되어 산화 구리(Ⅱ)로 변한다.\n· (나): 속불꽃에 존재하는 일산화 탄소(또는 탄소)는 산소를 얻으려는 경향이 있다. 따라서 산화 구리(Ⅱ)가 산소를 잃어 환원되어 구리로 변하고, 일산화 탄소(또는 탄소)가 산소를 얻어 산화되어 이산화 탄소로 변한다." },
+
+  { id:"q8", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"③",
+    text:"그림 (가)는 구리판을 알코올램프의 겉불꽃에 넣어 가열한 모습, (나)는 가열한 구리판을 속불꽃에 넣어 가열한 모습이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+    image:"images/copper-ab.png",
+    note:"<보기>\nㄱ. (가)에서 구리는 산화된다.\nㄴ. (나)에서 산화 구리(Ⅱ)는 환원된다.\nㄷ. (나)에서 산소를 얻는 물질은 산화 구리(Ⅱ)이다.\n\n① ㄱ   ② ㄷ   ③ ㄱ,ㄴ   ④ ㄴ,ㄷ   ⑤ ㄱ,ㄴ,ㄷ" },
+
+  { id:"q9", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"[개념 체크] 그림 (가)는 마그네슘 리본을 공기 중에서 연소시키는 것을, (나)는 마그네슘 가루를 드라이아이스 통에 넣고 연소시키는 것을 나타낸 것이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.\n\n(가)에서 마그네슘은 산화되었다.",
+    image:"images/mg-ribbon.png" },
+  { id:"q10", type:"choice", options:["O","X"], correctAnswer:"X",
+    text:"(나)에서 마그네슘은 환원, 드라이아이스는 산화되었다.",
+    image:"images/mg-ribbon.png" },
+  { id:"q11", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"(나)에서 산소는 드라이아이스에서 마그네슘으로 이동하였다.",
+    image:"images/mg-ribbon.png" },
+  { id:"q12", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"(가)의 반응은 2Mg+O2 → 2MgO이다.",
+    image:"images/mg-ribbon.png" },
+  { id:"q13", type:"choice", options:["O","X"], correctAnswer:"O",
+    text:"(나)의 반응은 2Mg+CO2 → 2MgO+C이다.",
+    image:"images/mg-ribbon.png" },
+
+  { id:"q14", type:"blank", correctAnswer:"㉠ 산화, ㉡ 환원",
+    text:"다음은 산화·환원 반응의 화학 반응식을 나타낸 것이다. 산화 또는 환원 중에서 ㉠, ㉡에 들어갈 알맞은 말을 쓰시오. (예: ㉠ 산화, ㉡ 환원)",
+    image:"images/equation-mg.png" },
+  { id:"q15", type:"blank", correctAnswer:"㉠ 환원, ㉡ 산화",
+    text:"다음은 산화·환원 반응의 화학 반응식을 나타낸 것이다. 산화 또는 환원 중에서 ㉠, ㉡에 들어갈 알맞은 말을 쓰시오. (예: ㉠ 산화, ㉡ 환원)",
+    image:"images/equation-fe.png" },
+
+  { id:"q16", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"⑤",
+    text:"[기출문제] 아래 그림을 보고 물음에 답하세요. (2020년 3월 학평 5번 화학Ⅰ)",
+    image:"images/exam-1.png", imageSize:"small" },
+  { id:"q17", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"②",
+    text:"[기출문제] 아래 그림을 보고 물음에 답하세요. (2025년 10월 학평 5번 통합과학)",
+    image:"images/exam-2.png", imageSize:"small" },
+  { id:"q18", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"①",
+    text:"[기출문제] 아래 그림을 보고 물음에 답하세요. (학력평가 기출)",
+    image:"images/exam-3.png", imageSize:"small" },
+  { id:"q19", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"③",
+    text:"[기출문제] 아래 그림을 보고 물음에 답하세요. (2020년 3월 학평 14번 화학Ⅰ)",
+    image:"images/exam-4.png", imageSize:"small" },
+];
+
+const REFLECTIONS = [
+  "이번 소단원에서 가장 호기심이 생겼던 개념이나, 이해가 잘 되지 않아 막혔던 부분은 무엇인가요?",
+  "위에서 선택한 내용이 왜 그렇게 느껴졌는지 설명해 보세요. (예: 기존 알고 있던 내용과 달라서, 개념이 추상적이어서, 실생활 적용 사례가 궁금해서 등)",
+  "그 어려움이나 궁금증을 해결하기 위해 어떤 노력(추가 자료 탐색, 교사 질문, 관련 도서 검색 등)을 했거나 할 예정인가요?",
+];
+
+const TOTAL_Q = QUESTIONS.length;
+const TOTAL_ALL = QUESTIONS.length + REFLECTIONS.length;
+const HEADERS = QUESTIONS.map(q=>q.text).concat(REFLECTIONS);
+const CORRECT_ANSWERS = QUESTIONS.map(q=>q.correctAnswer||"").concat(["","",""]);
+
+/* ============================================================
+   상태
+   ============================================================ */
+const state = {
+  screen:"intro",
+  studentName:"",
+  studentClass:"",
+  qIndex:0,
+  rIndex:0,
+  answers: new Array(TOTAL_ALL).fill(""),
+  picked:null,
+};
+
+// 반 선택 드롭다운(1반~10반) 채우기
+(function fillClassOptions(){
+  const sel = document.getElementById("input-class");
+  for(let i=1;i<=10;i++){
+    const opt = document.createElement("option");
+    opt.value = i+"반";
+    opt.textContent = i+"반";
+    sel.appendChild(opt);
+  }
+})();
+
+function showScreen(name){
+  state.screen = name;
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  document.getElementById("screen-"+name).classList.add("on");
+}
+
+/* ============================================================
+   문항 화면 렌더링
+   ============================================================ */
+function renderQuestion(){
+  const q = QUESTIONS[state.qIndex];
+  state.picked = state.answers[state.qIndex] || null;
+
+  document.getElementById("q-progress-label").textContent = "문항 " + (state.qIndex+1) + " / " + TOTAL_Q;
+  document.getElementById("q-progress-fill").style.width = Math.round(((state.qIndex)/TOTAL_Q)*100) + "%";
+  document.getElementById("q-text").textContent = q.text;
+
+  const imgEl = document.getElementById("q-image");
+  if(q.image){
+    imgEl.src = q.image;
+    imgEl.classList.remove("hidden");
+    imgEl.classList.toggle("q-image-small", q.imageSize === "small");
+  }
+  else{ imgEl.classList.add("hidden"); imgEl.removeAttribute("src"); }
+
+  const noteEl = document.getElementById("q-note");
+  if(q.note){ noteEl.textContent = q.note; noteEl.classList.remove("hidden"); }
+  else{ noteEl.classList.add("hidden"); }
+
+  const optWrap = document.getElementById("q-options");
+  const blankInput = document.getElementById("q-blank-input");
+  const shortInput = document.getElementById("q-short-input");
+  const nextBtn = document.getElementById("btn-next");
+  const prevBtn = document.getElementById("btn-prev");
+  prevBtn.disabled = state.qIndex === 0;
+
+  if(q.type === "choice"){
+    blankInput.classList.add("hidden");
+    shortInput.classList.add("hidden");
+    optWrap.classList.remove("hidden");
+    optWrap.innerHTML = "";
+    optWrap.style.setProperty("--n-options", q.options.length);
+    q.options.forEach(opt=>{
+      const b = document.createElement("button");
+      b.className = "opt-btn" + (state.picked===opt ? " picked" : "");
+      b.textContent = opt;
+      b.addEventListener("click", ()=>{
+        state.picked = opt;
+        optWrap.querySelectorAll(".opt-btn").forEach(el=>el.classList.remove("picked"));
+        b.classList.add("picked");
+        nextBtn.disabled = false;
+      });
+      optWrap.appendChild(b);
+    });
+    nextBtn.disabled = !state.picked;
+  } else if(q.type === "short"){
+    optWrap.classList.add("hidden");
+    blankInput.classList.add("hidden");
+    shortInput.classList.remove("hidden");
+    shortInput.value = state.picked || "";
+    nextBtn.disabled = !shortInput.value.trim();
+    shortInput.oninput = ()=>{ nextBtn.disabled = !shortInput.value.trim(); };
+  } else {
+    optWrap.classList.add("hidden");
+    shortInput.classList.add("hidden");
+    blankInput.classList.remove("hidden");
+    blankInput.value = state.picked || "";
+    nextBtn.disabled = !blankInput.value.trim();
+    blankInput.oninput = ()=>{ nextBtn.disabled = !blankInput.value.trim(); };
+  }
+}
+
+function captureCurrentAnswer(){
+  const q = QUESTIONS[state.qIndex];
+  let val;
+  if(q.type === "choice") val = state.picked;
+  else if(q.type === "short") val = document.getElementById("q-short-input").value.trim();
+  else val = document.getElementById("q-blank-input").value.trim();
+  if(val) state.answers[state.qIndex] = val;
+}
+
+document.getElementById("btn-prev").addEventListener("click", ()=>{
+  if(state.qIndex === 0) return;
+  captureCurrentAnswer();
+  state.qIndex--;
+  renderQuestion();
+});
+
+document.getElementById("btn-next").addEventListener("click", ()=>{
+  const q = QUESTIONS[state.qIndex];
+  let val;
+  if(q.type === "choice") val = state.picked;
+  else if(q.type === "short") val = document.getElementById("q-short-input").value.trim();
+  else val = document.getElementById("q-blank-input").value.trim();
+  state.answers[state.qIndex] = val;
+  reportProgress();
+  if(state.qIndex < TOTAL_Q - 1){
+    state.qIndex++;
+    renderQuestion();
+  } else {
+    state.rIndex = 0;
+    showScreen("reflect");
+    renderReflect();
+  }
+});
+
+/* ============================================================
+   성찰 질문 화면
+   ============================================================ */
+function renderReflect(){
+  document.getElementById("r-progress-label").textContent = "성찰 질문 " + (state.rIndex+1) + " / " + REFLECTIONS.length;
+  document.getElementById("r-progress-fill").style.width = Math.round((state.rIndex/REFLECTIONS.length)*100) + "%";
+  document.getElementById("r-text").textContent = REFLECTIONS[state.rIndex];
+  const input = document.getElementById("r-input");
+  input.value = state.answers[TOTAL_Q + state.rIndex] || "";
+  const nextBtn = document.getElementById("btn-reflect-next");
+  nextBtn.disabled = input.value.trim().length < 10;
+  input.oninput = ()=>{ nextBtn.disabled = input.value.trim().length < 10; };
+}
+
+document.getElementById("btn-reflect-prev").addEventListener("click", ()=>{
+  const input = document.getElementById("r-input");
+  const val = input.value.trim();
+  if(val) state.answers[TOTAL_Q + state.rIndex] = val;
+  if(state.rIndex > 0){
+    state.rIndex--;
+    renderReflect();
+  } else {
+    // 첫 성찰 질문에서 더 이전으로 가면 마지막 문항으로 돌아간다.
+    state.qIndex = TOTAL_Q - 1;
+    showScreen("question");
+    renderQuestion();
+  }
+});
+
+document.getElementById("btn-reflect-next").addEventListener("click", ()=>{
+  const input = document.getElementById("r-input");
+  state.answers[TOTAL_Q + state.rIndex] = input.value.trim();
+  reportProgress();
+  if(state.rIndex < REFLECTIONS.length - 1){
+    state.rIndex++;
+    renderReflect();
+  } else {
+    showScreen("complete");
+  }
+});
+
+/* ============================================================
+   시작 화면
+   ============================================================ */
+document.getElementById("btn-start").addEventListener("click", ()=>{
+  const name = document.getElementById("input-name").value.trim();
+  if(!name){ document.getElementById("input-name").focus(); return; }
+  state.studentName = name;
+  state.studentClass = document.getElementById("input-class").value;
+  state.qIndex = 0;
+  showScreen("question");
+  renderQuestion();
+});
+
+/* ============================================================
+   저장 — 재시도 + 자동 만회 포함 (leveled-practice-webapp 패턴)
+   ============================================================ */
+function sanitizeKey(name){ return name.trim().slice(0,20).replace(/[\/\\'"\s]/g, "_"); }
+
+let resyncTimer = null;
+// 여러 문항을 빠르게 연달아 풀어도 저장 요청이 겹쳐서 동시에 나가지 않도록
+// (겹치면 서버가 "아직 이 학생 행이 없다"고 동시에 두 번 판단해 중복 행이
+// 생길 수 있다 — Apps Script의 LockService와 함께 이중으로 방어한다),
+// 매 호출을 이전 호출이 끝난 뒤에 순서대로 실행되게 체인으로 묶는다.
+let reportChain = Promise.resolve();
+function reportProgress(){
+  reportChain = reportChain.then(reportProgressInner).catch(()=>{});
+  return reportChain;
+}
+async function reportProgressInner(){
+  if(!state.studentName) return;
+  if(!gasConfigured()) return;
+  const payload = {
+    key: sanitizeKey(state.studentName),
+    name: state.studentName,
+    class: state.studentClass,
+    headers: HEADERS,
+    correctAnswers: CORRECT_ANSWERS,
+    answers: state.answers,
+    updatedAt: Date.now(),
+  };
+  const body = JSON.stringify(payload);
+  const delays = [400, 1000, 2000, 3000];
+  let lastErr = "";
+  for(let attempt=0; attempt<delays.length; attempt++){
+    try{
+      const res = await fetch(GAS_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"text/plain;charset=utf-8" },
+        body,
+      });
+      // ⚠️ 검증된 함정: Apps Script는 서버 쪽에서 논리적으로 실패해도(예: 학생이
+      // 많이 몰려 락 대기 시간을 넘긴 경우) HTTP 상태 코드는 여전히 200으로
+      // 내려온다. res.ok(HTTP 상태만 봄)만 확인하면 이런 실패를 "성공"으로
+      // 착각해서 재시도를 안 하고 그대로 데이터 유실로 이어진다 — 반드시
+      // 응답 본문(JSON)의 ok 필드까지 같이 확인할 것.
+      if(res.ok){
+        let payloadOk = false;
+        try{ const j = await res.json(); payloadOk = !!(j && j.ok); }catch(parseErr){ payloadOk = false; }
+        if(payloadOk){ clearTimeout(resyncTimer); setConnStatus("ok"); return; }
+        lastErr = "서버가 처리하지 못했어요(응답: 실패)";
+      } else {
+        lastErr = "서버 응답 코드 " + res.status;
+      }
+    }catch(err){
+      lastErr = String(err && err.message ? err.message : err);
+    }
+    await new Promise(r=>setTimeout(r, delays[attempt]));
+  }
+  setConnStatus("bad", lastErr);
+  clearTimeout(resyncTimer);
+  resyncTimer = setTimeout(reportProgress, 5000);
+}
+
+function setConnStatus(kind, detail){
+  const el = document.getElementById("conn-status");
+  el.classList.remove("conn-ok","conn-bad");
+  if(kind==="ok"){ el.classList.add("conn-ok"); el.innerHTML = "<i></i> 실시간 연결됨"; }
+  else if(kind==="bad"){ el.classList.add("conn-bad"); el.innerHTML = "<i></i> 연결 안 됨"; }
+  else{ el.innerHTML = "<i></i> 연결 확인 중…"; }
+  const detailEl = document.getElementById("conn-detail");
+  if(kind==="bad" && detail){ detailEl.textContent = "오류 내용: " + detail; detailEl.classList.remove("hidden"); }
+  else{ detailEl.classList.add("hidden"); }
+}
+async function runConnectionSelfTest(){
+  if(!gasConfigured()){ setConnStatus("bad", "GAS_URL이 아직 설정되지 않음"); return; }
+  try{
+    const res = await fetch(GAS_URL, { method:"GET" });
+    if(!res.ok){ setConnStatus("bad", "서버 응답 코드 " + res.status); return; }
+    const data = await res.json();
+    setConnStatus(data && data.headers !== undefined ? "ok" : "bad");
+  }catch(e){ setConnStatus("bad", String(e && e.message ? e.message : e)); }
+}
+function setNetStatus(kind, detail){
+  const el = document.getElementById("net-status");
+  el.classList.remove("conn-ok","conn-bad");
+  if(kind==="ok"){ el.classList.add("conn-ok"); el.innerHTML = "<i></i> 인터넷 정상"; }
+  else{ el.classList.add("conn-bad"); el.innerHTML = "<i></i> 인터넷 확인 필요"; }
+}
+async function runNetworkSelfTest(){
+  try{
+    const res = await fetch("https://jsonplaceholder.typicode.com/todos/1", { method:"GET" });
+    const data = await res.json();
+    setNetStatus(data && data.id ? "ok" : "bad");
+  }catch(e){ setNetStatus("bad"); }
+}
+runConnectionSelfTest();
+runNetworkSelfTest();
+
+/* ============================================================
+   선생님 보기 — 접근 제어
+   ============================================================ */
+let teacherUnlocked = false;
+document.getElementById("btn-teacher-toggle").addEventListener("click", ()=>{
+  teacherUnlocked ? openTeacherPanel() : openGateModal();
+});
+function openGateModal(){
+  document.getElementById("teacher-gate-modal").classList.remove("hidden");
+  document.getElementById("teacher-gate-input").value = "";
+  document.getElementById("teacher-gate-error").textContent = "";
+  document.getElementById("teacher-gate-input").focus();
+}
+document.getElementById("teacher-gate-cancel").addEventListener("click", ()=>{
+  document.getElementById("teacher-gate-modal").classList.add("hidden");
+});
+document.getElementById("teacher-gate-confirm").addEventListener("click", tryGateSubmit);
+document.getElementById("teacher-gate-input").addEventListener("keydown", (e)=>{
+  if(e.key==="Enter") tryGateSubmit();
+});
+function tryGateSubmit(){
+  const val = document.getElementById("teacher-gate-input").value;
+  if(val === TEACHER_PASSCODE){
+    teacherUnlocked = true;
+    document.getElementById("teacher-gate-modal").classList.add("hidden");
+    openTeacherPanel();
+  } else {
+    document.getElementById("teacher-gate-error").textContent = "암호가 올바르지 않습니다.";
+  }
+}
+
+/* ============================================================
+   선생님 패널
+   ============================================================ */
+let teacherTab = "progress";
+let teacherRowsCache = null;
+let tqIndex = 0;
+let tqActiveResultTab = "student"; // student | correct
+let tqRevealed = false; // 이 문항의 결과를 공개했는지 — 문항이 바뀌면 항상 false로 리셋
+let teacherClass = null; // 선생님이 선택한 반 — 선택 전에는 진행상황/문항별 결과로 못 넘어간다
+
+// 반 선택 드롭다운(1반~10반) 채우기 — 학생용과 동일한 목록
+(function fillTeacherClassOptions(){
+  const sel = document.getElementById("teacher-class-select");
+  for(let i=1;i<=10;i++){
+    const opt = document.createElement("option");
+    opt.value = i+"반";
+    opt.textContent = i+"반";
+    sel.appendChild(opt);
+  }
+})();
+
+function openTeacherPanel(){
+  document.getElementById("teacher-panel").classList.remove("hidden");
+  // 패널을 열면 항상 반 선택 화면부터 보여준다 (진행 상황으로 바로 가지 않음).
+  document.getElementById("teacher-classpick-view").classList.remove("hidden");
+  document.getElementById("teacher-main-view").classList.add("hidden");
+  if(teacherClass) document.getElementById("teacher-class-select").value = teacherClass;
+}
+document.getElementById("btn-teacher-class-confirm").addEventListener("click", ()=>{
+  teacherClass = document.getElementById("teacher-class-select").value;
+  document.getElementById("teacher-current-class").textContent = teacherClass + " 보는 중";
+  document.getElementById("teacher-classpick-view").classList.add("hidden");
+  document.getElementById("teacher-main-view").classList.remove("hidden");
+  switchTeacherTab("progress");
+  loadTeacherData();
+});
+document.getElementById("btn-teacher-change-class").addEventListener("click", ()=>{
+  document.getElementById("teacher-classpick-view").classList.remove("hidden");
+  document.getElementById("teacher-main-view").classList.add("hidden");
+});
+document.getElementById("btn-teacher-close").addEventListener("click", ()=>{
+  document.getElementById("teacher-panel").classList.add("hidden");
+});
+document.getElementById("tab-progress").addEventListener("click", ()=>switchTeacherTab("progress"));
+document.getElementById("tab-results").addEventListener("click", ()=>switchTeacherTab("results"));
+document.getElementById("btn-teacher-refresh").addEventListener("click", loadTeacherData);
+
+let resetArmed = false, resetArmTimer = null;
+document.getElementById("btn-teacher-reset").addEventListener("click", ()=>{
+  const btn = document.getElementById("btn-teacher-reset");
+  if(!resetArmed){
+    resetArmed = true;
+    btn.textContent = "정말요? 다시 누르면 삭제";
+    btn.classList.add("danger");
+    clearTimeout(resetArmTimer);
+    resetArmTimer = setTimeout(()=>{ resetArmed=false; btn.textContent="🗑 전체 초기화"; btn.classList.remove("danger"); }, 4000);
+    return;
+  }
+  clearTimeout(resetArmTimer);
+  resetArmed = false;
+  runResetAll();
+});
+async function runResetAll(){
+  const btn = document.getElementById("btn-teacher-reset");
+  btn.disabled = true; btn.textContent = "삭제 중…"; btn.classList.remove("danger");
+  try{
+    if(gasConfigured() && teacherClass){
+      await fetch(GAS_URL + "?action=reset&class=" + encodeURIComponent(teacherClass), { method: "GET" });
+    }
+  }
+  catch(e){ /* 실패해도 조용히 넘어가고 현재 상태를 다시 불러와 보여준다 */ }
+  btn.disabled = false; btn.textContent = "🗑 전체 초기화";
+  loadTeacherData();
+}
+
+function switchTeacherTab(tab){
+  teacherTab = tab;
+  document.getElementById("tab-progress").classList.toggle("active", tab==="progress");
+  document.getElementById("tab-results").classList.toggle("active", tab==="results");
+  document.getElementById("teacher-progress-view").classList.toggle("hidden", tab!=="progress");
+  document.getElementById("teacher-results-view").classList.toggle("hidden", tab!=="results");
+  if(tab==="results") renderTeacherQuestion();
+}
+
+async function loadTeacherData(){
+  if(!teacherClass) return; // 반을 아직 선택하지 않았으면 아무 것도 불러오지 않는다.
+  const btn = document.getElementById("btn-teacher-refresh");
+  btn.disabled = true;
+  const progBody = document.getElementById("teacher-progress-body");
+  if(!gasConfigured()){
+    progBody.innerHTML = '<div class="empty-note">아직 구글 시트 연결 주소가 설정되지 않았어요.</div>';
+    btn.disabled = false;
+    return;
+  }
+  try{
+    let data, lastErr=null;
+    for(let i=0;i<2;i++){
+      try{
+        const res = await fetch(GAS_URL + "?class=" + encodeURIComponent(teacherClass), { method:"GET" });
+        data = await res.json();
+        lastErr = null;
+        break;
+      }catch(e){ lastErr=e; if(i===0) await new Promise(r=>setTimeout(r,600)); }
+    }
+    if(lastErr) throw lastErr;
+    teacherRowsCache = data;
+    renderTeacherProgress(data);
+    if(teacherTab==="results") renderTeacherQuestion();
+  }catch(err){
+    const msg = String(err && err.message ? err.message : err);
+    progBody.innerHTML = '<div class="empty-note">불러오지 못했어요.<br>오류: '+escapeHtml(msg)+'</div>';
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function extractStudentNumber(name){
+  const m = String(name).trim().match(/^(\d+)/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+/* --- 1번 화면: 학생 진행 상황 (이름 보임) --- */
+function renderTeacherProgress(data){
+  const body = document.getElementById("teacher-progress-body");
+  const rows = (data && data.rows) || [];
+  if(rows.length === 0){
+    body.innerHTML = '<div class="empty-note">아직 접속한 학생이 없어요.</div>';
+    return;
+  }
+  // 학번(이름 맨 앞의 숫자) 오름차순 정렬 — 숫자로 비교해야 "9"와 "10101" 같은
+  // 자릿수가 다른 학번도 올바른 순서로 나온다. 학번을 못 찾으면 뒤로 보낸다.
+  const sorted = rows.slice().sort((a,b)=>{
+    const na = extractStudentNumber(a.name);
+    const nb = extractStudentNumber(b.name);
+    if(na!==null && nb!==null) return na - nb;
+    if(na!==null) return -1;
+    if(nb!==null) return 1;
+    return String(a.name).localeCompare(String(b.name));
+  });
+  body.innerHTML = '<div class="stu-grid">' + sorted.map(r=>{
+    const doneCount = (r.answers||[]).slice(0, TOTAL_Q).filter(v=>String(v||"").trim()!=="").length;
+    const pct = Math.round((doneCount/TOTAL_Q)*100);
+    const acc = (r.accuracy===undefined || r.accuracy==="") ? "-" : (r.accuracy+"%");
+    return '<div class="stu-row">'
+      + '<div class="stu-name">'+escapeHtml(r.name)+'</div>'
+      + '<div class="stu-meta">'
+      +   '<div class="stu-bar"><i style="width:'+pct+'%"></i></div>'
+      +   '<div class="stu-count">'+doneCount+' / '+TOTAL_Q+'</div>'
+      +   '<div class="stu-acc">정답률 '+acc+'</div>'
+      + '</div></div>';
+  }).join('') + '</div>';
+}
+
+/* --- 2번 화면부터: 문항별 결과 (이름 감춤) --- */
+document.getElementById("btn-tq-prev").addEventListener("click", ()=>{
+  if(tqIndex>0){ tqIndex--; tqActiveResultTab="student"; tqRevealed=false; renderTeacherQuestion(); }
+});
+document.getElementById("btn-tq-next").addEventListener("click", ()=>{
+  if(tqIndex < TOTAL_ALL-1){ tqIndex++; tqActiveResultTab="student"; tqRevealed=false; renderTeacherQuestion(); }
+});
+
+function renderTeacherQuestion(){
+  document.getElementById("tq-label").textContent = "문항 " + (tqIndex+1) + " / " + TOTAL_ALL;
+  const isQuestion = tqIndex < TOTAL_Q;
+  const qData = isQuestion ? QUESTIONS[tqIndex] : null;
+  document.getElementById("tq-text").textContent = isQuestion ? qData.text : REFLECTIONS[tqIndex - TOTAL_Q];
+  const imgEl = document.getElementById("tq-image");
+  if(isQuestion && qData.image){
+    imgEl.src = qData.image;
+    imgEl.classList.remove("hidden");
+    imgEl.classList.toggle("q-image-small", qData.imageSize === "small");
+  }
+  else{ imgEl.classList.add("hidden"); imgEl.removeAttribute("src"); }
+  const noteEl = document.getElementById("tq-note");
+  if(isQuestion && qData.note){ noteEl.textContent = qData.note; noteEl.classList.remove("hidden"); }
+  else{ noteEl.classList.add("hidden"); }
+
+  const area = document.getElementById("tq-result-area");
+  const rows = (teacherRowsCache && teacherRowsCache.rows) || [];
+  // ⚠️ 절대로 이 아래에서 r.name을 화면에 그리지 않는다 — 문항별 결과 화면은 항상 익명.
+  // ⚠️ 구글 시트가 "5"처럼 숫자로만 된 답을 자동으로 숫자 타입으로 바꿔버릴 수
+  // 있어서, 여기서 미리 전부 문자열로 강제 변환해 둔다 — 안 그러면 아래
+  // 카드 렌더링(.length, .slice)이나 원그래프 집계에서 오류가 나 화면이
+  // 통째로 비어버리는 사고가 난다 (실제로 겪은 버그).
+  const colAnswers = rows.map(r=> String((r.answers && r.answers[tqIndex]) || "")).filter(v=>v.trim()!=="");
+  const correctVal = CORRECT_ANSWERS[tqIndex];
+
+  if(!tqRevealed){
+    // 학생들과 문제를 같이 논의하는 동안에는 결과를 먼저 보여주지 않는다.
+    // 교사가 준비됐을 때 직접 눌러야만 그 아래 결과(분포·정답·서답형 답안)가 나온다.
+    area.innerHTML = '<div class="result-body" style="text-align:center; padding:36px 20px;">'
+      + '<div style="color:var(--muted); margin-bottom:16px;">아직 결과를 공개하지 않았어요. 학생들과 먼저 논의해 보세요.</div>'
+      + '<button class="btn" id="btn-reveal-result">결과 보기</button>'
+      + '</div>';
+    document.getElementById("btn-reveal-result").addEventListener("click", ()=>{ tqRevealed = true; renderTeacherQuestion(); });
+    return;
+  }
+
+  if(correctVal){
+    // 선택형·빈칸형(정답 있음) — 학생 정답 / 정답 탭
+    area.innerHTML =
+      '<div class="result-tabs">'
+      + '<div class="rtab '+(tqActiveResultTab==="student"?"active":"")+'" id="rtab-student">학생 정답</div>'
+      + '<div class="rtab '+(tqActiveResultTab==="correct"?"active":"")+'" id="rtab-correct">정답</div>'
+      + '</div>'
+      + '<div class="result-body" id="result-body"></div>';
+    document.getElementById("rtab-student").addEventListener("click", ()=>{ tqActiveResultTab="student"; renderTeacherQuestion(); });
+    document.getElementById("rtab-correct").addEventListener("click", ()=>{ tqActiveResultTab="correct"; renderTeacherQuestion(); });
+
+    const resultBody = document.getElementById("result-body");
+    if(tqActiveResultTab==="correct"){
+      resultBody.innerHTML = '<div class="correct-reveal">정답<div class="big">'+escapeHtml(correctVal)+'</div></div>';
+    } else {
+      resultBody.innerHTML = buildPieHtml(colAnswers, correctVal, isQuestion ? qData : null);
+    }
+  } else {
+    // 서답형 — 답안 카드 목록 + 스포트라이트 (+ 모범답안이 있으면 탭으로 같이 제공)
+    const sampleAnswer = isQuestion && qData.sampleAnswer;
+    function renderCards(){
+      if(colAnswers.length===0){
+        return '<div class="no-response">아직 응답이 없어요.</div>';
+      }
+      return '<div class="answer-cards">' + colAnswers.map((txt)=>{
+        const short = txt.length > 60 ? txt.slice(0,60)+'…' : txt;
+        return '<div class="answer-card" data-full="'+encodeURIComponent(txt)+'">'+escapeHtml(short)+'</div>';
+      }).join('') + '</div>';
+    }
+    if(sampleAnswer){
+      area.innerHTML =
+        '<div class="result-tabs">'
+        + '<div class="rtab '+(tqActiveResultTab==="student"?"active":"")+'" id="rtab-student">학생 정답</div>'
+        + '<div class="rtab '+(tqActiveResultTab==="correct"?"active":"")+'" id="rtab-correct">모범답안</div>'
+        + '</div>'
+        + '<div class="result-body" id="result-body"></div>';
+      document.getElementById("rtab-student").addEventListener("click", ()=>{ tqActiveResultTab="student"; renderTeacherQuestion(); });
+      document.getElementById("rtab-correct").addEventListener("click", ()=>{ tqActiveResultTab="correct"; renderTeacherQuestion(); });
+      const resultBody = document.getElementById("result-body");
+      if(tqActiveResultTab==="correct"){
+        resultBody.innerHTML = '<div class="correct-reveal" style="white-space:pre-line; font-size:18px; text-align:left;">'+escapeHtml(sampleAnswer)+'</div>';
+      } else {
+        resultBody.innerHTML = renderCards();
+        area.querySelectorAll('.answer-card').forEach(el=>{
+          el.addEventListener('click', ()=> openSpotlight(decodeURIComponent(el.dataset.full)));
+        });
+      }
+    } else {
+      area.innerHTML = '<div class="result-body">' + renderCards() + '</div>';
+      area.querySelectorAll('.answer-card').forEach(el=>{
+        el.addEventListener('click', ()=> openSpotlight(decodeURIComponent(el.dataset.full)));
+      });
+    }
+  }
+}
+
+function buildPieHtml(colAnswers, correctVal, qData){
+  // ⚠️ 구글 시트는 셀 값이 "5"처럼 숫자로만 되어 있으면 자동으로 숫자
+  // 타입으로 바꿔버린다. 그 값이 그대로 넘어오면 문자열 메서드(.trim() 등)
+  // 호출 시 오류가 나서 화면이 통째로 비어버리는 사고가 난다 — 반드시
+  // 여기서 전부 String()으로 강제 변환하고 시작한다.
+  const safeAnswers = colAnswers.map(v=>String(v));
+  const total = safeAnswers.length;
+  if(total===0) return '<div class="no-response">아직 응답이 없어요.</div>';
+
+  const PALETTE = ["#4fb6a8","#e3a23d","#5b8fd6","#d5566b","#9c6ade","#38bdf8","#f472b6","#a3e635"];
+  let categories;
+  if(qData && qData.type === "choice"){
+    // 선택형은 미리 정해진 보기 목록 순서대로 — 응답이 0명인 보기도 그대로 보여준다.
+    categories = qData.options.map((opt, i)=>({
+      label: opt,
+      count: safeAnswers.filter(v=>v===opt).length,
+      color: PALETTE[i % PALETTE.length],
+    }));
+  } else {
+    // 빈칸형(단답형)은 "정답/오답"으로 뭉치지 않고, 학생들이 실제로 적은
+    // 표현을 그대로 각각 원그래프 조각으로 보여준다 — 표현이 여러 가지로
+    // 나올 수 있으므로, 정답 판정은 구글 시트의 정답률 계산·"정답" 탭에서
+    // 이미 하고 있고 이 원그래프는 "학생들이 뭐라고 적었는지" 보여주는
+    // 용도이기 때문이다.
+    const uniqueVals = Array.from(new Set(safeAnswers));
+    categories = uniqueVals.map((val, i)=>({
+      label: val,
+      count: safeAnswers.filter(v=>v===val).length,
+      color: PALETTE[i % PALETTE.length],
+    }));
+  }
+
+  let acc = 0;
+  const stops = categories.map(c=>{
+    const pct = total>0 ? (c.count/total*100) : 0;
+    const start = acc; acc += pct;
+    return c.color + " " + start.toFixed(1) + "% " + acc.toFixed(1) + "%";
+  }).join(", ");
+
+  const legend = categories.map(c=>{
+    const pct = total>0 ? Math.round(c.count/total*100) : 0;
+    return '<div class="legend-item"><span class="legend-swatch" style="background:'+c.color+'"></span>'
+      + escapeHtml(c.label) + ' — ' + c.count + '명 ('+pct+'%)</div>';
+  }).join('');
+
+  return '<div class="pie-wrap">'
+    + '<div class="pie" style="background:conic-gradient('+stops+')"></div>'
+    + '<div class="legend">'+legend+'</div>'
+    + '</div>'
+    + '<div style="text-align:center; color:var(--muted); font-size:13px; margin-top:6px;">전체 응답 '+total+'명</div>';
+}
+
+/* --- 스포트라이트 --- */
+function openSpotlight(text){
+  document.getElementById('spotlight-text').textContent = text;
+  document.getElementById('spotlight-overlay').classList.add('on');
+}
+document.getElementById('btn-spotlight-close').addEventListener('click', ()=>{
+  document.getElementById('spotlight-overlay').classList.remove('on');
+});
+
+/* --- 토스트(선택 사항, 저장 성공시 조용히 표시하고 싶을 때 사용) --- */
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+</script>
+</body>
+</html>
