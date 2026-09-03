@@ -767,7 +767,7 @@ document.getElementById("btn-reflect-next").addEventListener("click", ()=>{
 /* ============================================================
    시작 화면
    ============================================================ */
-document.getElementById("btn-start").addEventListener("click", ()=>{
+document.getElementById("btn-start").addEventListener("click", async ()=>{
   const number = document.getElementById("input-number").value.trim();
   const name = document.getElementById("input-name").value.trim();
   if(!number){ document.getElementById("input-number").focus(); return; }
@@ -775,9 +775,37 @@ document.getElementById("btn-start").addEventListener("click", ()=>{
   state.studentName = number + " " + name;
   state.studentClass = document.getElementById("input-class").value;
   state.qIndex = 0;
+
+  const startBtn = document.getElementById("btn-start");
+  startBtn.disabled = true;
+  await restorePreviousAnswers();
+  startBtn.disabled = false;
+
   showScreen("question");
   renderQuestion();
 });
+
+// 이 학생이 예전에 한 번이라도 제출한 적이 있으면, 그때 고르거나 적었던
+// 답을 그대로 불러와 state.answers에 채워 둔다 — 다시 들어왔을 때 각
+// 문항에 자기가 전에 선택/입력한 내용이 그대로 보이게 하기 위함이다.
+async function restorePreviousAnswers(){
+  if(!gasConfigured()) return;
+  try{
+    const res = await fetch(GAS_URL + "?class=" + encodeURIComponent(state.studentClass));
+    if(!res.ok) return;
+    const data = await res.json();
+    const rows = (data && data.rows) || [];
+    const found = rows.find(r => r.name === state.studentName);
+    if(found && Array.isArray(found.answers)){
+      for(let i=0; i<TOTAL_ALL && i<found.answers.length; i++){
+        const v = found.answers[i];
+        if(v !== undefined && v !== null && String(v).trim() !== ""){
+          state.answers[i] = String(v);
+        }
+      }
+    }
+  }catch(e){ /* 못 불러와도 그냥 새로 시작하게 둔다 */ }
+}
 
 /* ============================================================
    저장 — 재시도 + 자동 만회 포함 (leveled-practice-webapp 패턴)
