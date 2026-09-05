@@ -869,9 +869,18 @@ function gasConfigured(){
   const PS_POLL_MS = 5000;
   const overlay = document.getElementById('problemstop-overlay');
   const appRoot = document.getElementById('app-root');
+  // ?t=1 로 들어온 교사용 링크는 애초에 이 기능의 영향을 받지 않는다
+  // (교사가 스스로를 막을 이유가 없음 — 접속 게이트의 teacherBypass와 동일한 원칙).
+  const teacherBypassPS = new URLSearchParams(window.location.search).has('t');
 
   function paint(stopped){
-    overlay.classList.toggle('hidden', !stopped);
+    // 학생용 링크로 들어왔더라도, 그 안에서 "선생님 보기"(교사용 패널)를 열어
+    // 학생들과 화면을 공유하며 풀이 중인 경우에는 화면을 잠그면 안 된다 —
+    // 교사가 직접 조작해야 하는 화면이기 때문. 교사 패널이 열려 있는 동안은
+    // 정지 상태여도 오버레이를 항상 숨긴다.
+    const teacherPanelOpen = !!document.getElementById('teacher-panel') &&
+      document.getElementById('teacher-panel').classList.contains('on');
+    overlay.classList.toggle('hidden', !stopped || teacherPanelOpen);
   }
 
   function fetchStopped(){
@@ -884,7 +893,7 @@ function gasConfigured(){
   }
 
   function poll(){
-    if(!gasConfigured()) return;
+    if(!gasConfigured() || teacherBypassPS) return;
     fetchStopped()
       .then(stopped=> paint(stopped))
       .catch(()=>{ /* 폴링 중 일시적 오류는 무시하고 다음 주기에 다시 확인 */ });
