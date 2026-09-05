@@ -146,6 +146,9 @@
     white-space:pre-wrap;
   }
   .qtext{ font-size:17px; font-weight:700; line-height:1.6; margin:6px 0 4px; white-space:pre-wrap; }
+  /* 학생용 "공통 조건(보기 설명)" 안내 문구 — 교사용 .reflect-guide와 같은 톤(무채색/보조색,
+     본문 .qtext보다 작은 폰트)으로, q.guideText가 있을 때만 표시된다(renderQuestion 참고). */
+  .q-guide{ font-size:15px; color:var(--muted); line-height:1.6; margin:6px 0 2px; white-space:pre-wrap; }
   .qimg-wrap{ margin:12px 0; text-align:center; }
   .qimg-wrap img{ max-width:100%; border-radius:10px; border:1px solid var(--line); background:#fff; }
   .qimg-wrap.small img{ max-width:100%; }
@@ -210,6 +213,13 @@
   .accuracy-toggle.on{ background:rgba(93,184,114,.14); color:#3f7d54; border-color:rgba(93,184,114,.45); }
   .accuracy-toggle.off{ background:rgba(213,86,107,.14); color:#a34456; border-color:rgba(213,86,107,.4); }
   .gate-btn.state-confirm{ background:rgba(213,86,107,.35); color:var(--bad); border-color:var(--bad); }
+  /* "문제풀기 시작!"/"문제풀기 그만!" 토글 — 접속 게이트(.gate-btn)와 같은 톤 방식을
+     재사용한다. 기본(진행 중)은 은은한 초록, 확인 대기는 진한 빨강, 정지 상태는
+     눈에 띄는 빨강 계열로 접속 게이트의 state-closed와 같은 톤을 쓴다. */
+  .ps-btn{ font-weight:800; padding:8px 14px; font-size:12.5px; white-space:nowrap; }
+  .ps-btn.state-running{ background:var(--accent-dim); color:var(--accent); border-color:var(--accent); }
+  .ps-btn.state-confirm{ background:rgba(213,86,107,.35); color:var(--bad); border-color:var(--bad); }
+  .ps-btn.state-stopped{ background:rgba(213,86,107,.16); color:var(--bad); border-color:rgba(213,86,107,.4); }
   .class-label{ font-size:12.5px; color:var(--muted); white-space:nowrap; }
   .teacher-topbar .btn{ padding:8px 13px; font-size:12.5px; white-space:nowrap; }
   /* "방금 갱신함" 문구를 상단 바 오른쪽 끝이 아니라 "새로고침" 버튼 바로 아래
@@ -378,6 +388,9 @@
   /* 나중에 성찰 질문에 안내 문구가 추가될 때를 대비한 여분 문단 — 지금은 데이터에
      없으면 비워둔 채 hidden 처리된다 */
   .reflect-guide{ font-size:17px; color:var(--muted); line-height:1.65; margin:0 0 10px; }
+  /* 이제 성찰 질문뿐 아니라 "공통 조건" 안내로 매 문항마다 쓰이므로, 교실에서 읽을 수
+     있도록 교사 화면(.teacher-panel) 안에서만 폰트를 키운다(다른 화면에는 영향 없음) */
+  .teacher-panel .reflect-guide{ font-size:25px; }
 
   .reveal-gate{ text-align:center; margin:10px 0; }
   .reveal-gate .btn.primary{ font-size:22px; font-weight:800; padding:20px 36px; }
@@ -488,6 +501,20 @@
     font-size:min(42vw, 480px); font-weight:900; color:#1f6f5c; letter-spacing:-.02em; line-height:1;
   }
 
+  /* "문제풀기 그만!" 정지 상태 — 선생님이 정지시키면 학생 화면 전체를 덮어
+     아래 화면(선택지·입력창·이전/다음 버튼)이 전혀 조작되지 않게 막는다.
+     정답률 신기루(.accuracy-mirage, 민트 톤)와 혼동되지 않도록 다른(크림/베이지) 톤을 쓰고,
+     신기루처럼 잠깐 있다 사라지지 않고 선생님이 풀 때까지 계속 떠 있는다. */
+  .problemstop-overlay{
+    position:fixed; inset:0; z-index:400; display:flex; align-items:center; justify-content:center;
+    background:#f7f0e2; text-align:center; padding:24px;
+    pointer-events:auto; touch-action:none;
+  }
+  .problemstop-overlay.hidden{ display:none !important; pointer-events:none; }
+  .problemstop-msg{
+    font-size:min(7vw, 34px); font-weight:900; color:#8a6a2f; letter-spacing:-.01em; line-height:1.5;
+  }
+
   .hidden{ display:none !important; }
 
   /* 시간 검증 게이트 */
@@ -575,6 +602,7 @@
         </div>
         <span class="qnum" id="q-num">1 / 20</span>
       </div>
+      <div class="q-guide hidden" id="q-guide"></div>
       <div class="qtext" id="q-text"></div>
       <div class="qnote hidden" id="q-note"></div>
       <div class="qimg-wrap hidden" id="q-image-wrap"><img id="q-image" src="" alt=""></div>
@@ -658,6 +686,7 @@
         <button class="btn gate-btn state-unknown" id="btn-gate-toggle">접속 확인 중…</button>
         <span class="spacer"></span>
         <span class="class-label" id="teacher-current-class"></span>
+        <button class="btn ps-btn state-running" id="btn-problemstop-toggle">문제풀기 시작!</button>
         <button class="btn ghost accuracy-toggle on" id="btn-accuracy-toggle">정답률 공개</button>
         <button class="btn ghost" id="btn-change-class">반 변경</button>
         <span class="refresh-wrap">
@@ -749,6 +778,11 @@
   <div class="accuracy-mirage-num" id="accuracy-mirage-num"></div>
 </div>
 
+<!-- "문제풀기 그만!" 정지 오버레이 — 선생님이 정지시키면 학생 화면을 완전히 덮는다 -->
+<div class="problemstop-overlay hidden" id="problemstop-overlay">
+  <div class="problemstop-msg">문제를 선생님과<br>함께 풀어봅시다</div>
+</div>
+
 </div><!-- /#app-root -->
 
 <script>
@@ -824,6 +858,51 @@ function gasConfigured(){
 
 <script>
 /* ============================================================
+   "문제풀기 그만!" 정지 상태 폴링 (학생 화면 전용)
+   접속 게이트와는 완전히 별개의 공통 값이다. 접속 게이트는 접속 자체를
+   막지만, 이건 이미 들어와 문제를 풀고 있는 학생 화면을 선생님이 원할 때
+   잠깐 잠그는 용도다. app-root가 보인 뒤(=접속 게이트를 통과한 뒤)부터
+   5초마다 폴링하며, 정지 상태면 오버레이로 화면 전체를 덮어 그 아래
+   무엇도(선택지·입력창·이전/다음 버튼 등) 조작할 수 없게 막는다.
+   ============================================================ */
+(function problemStopWatcher(){
+  const PS_POLL_MS = 5000;
+  const overlay = document.getElementById('problemstop-overlay');
+  const appRoot = document.getElementById('app-root');
+
+  function paint(stopped){
+    overlay.classList.toggle('hidden', !stopped);
+  }
+
+  function fetchStopped(){
+    return fetch(GAS_URL + '?action=problemStopStatus', { method: 'GET' })
+      .then(res=>{
+        if(!res.ok) throw new Error('문제풀이상태 응답 오류');
+        return res.json();
+      })
+      .then(data=> !!(data && data.stopped));
+  }
+
+  function poll(){
+    if(!gasConfigured()) return;
+    fetchStopped()
+      .then(stopped=> paint(stopped))
+      .catch(()=>{ /* 폴링 중 일시적 오류는 무시하고 다음 주기에 다시 확인 */ });
+  }
+
+  // app-root가 실제로 보일 때(=접속 게이트 통과 후)부터 폴링을 시작한다.
+  const startWhenVisible = setInterval(()=>{
+    if(!appRoot.classList.contains('hidden')){
+      clearInterval(startWhenVisible);
+      poll();
+      setInterval(poll, PS_POLL_MS);
+    }
+  }, 300);
+})();
+</script>
+
+<script>
+/* ============================================================
    설정
 ============================================================ */
 const TEACHER_PASSCODE = "3699";
@@ -833,19 +912,24 @@ const CLASS_COUNT = 10;
    문항 데이터
 ============================================================ */
 const QUESTIONS = [
-  { id:"q1", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
-    text:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.\n\n모두 산소가 관여하는 산화 환원 반응이다.",
+  { id:"q1", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
+    text:"모두 산소가 관여하는 산화 환원 반응이다.",
     note:"(가) 화석 연료의 연소: CH₄+2O₂ → CO₂+H₂O\n(나) 철의 제련: Fe₂O₃+3CO → 2Fe+3CO₂\n(다) 광합성: 6CO₂+6H₂O → C₆H₁₂O₆+6O₂\n(라) 세포호흡: C₆H₁₂O₆+6O₂ → 6CO₂+6H₂O" },
-  { id:"q2", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
+  { id:"q2", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"광합성에서 이산화 탄소는 환원된다.",
     note:"(가) 화석 연료의 연소: CH₄+2O₂ → CO₂+H₂O\n(나) 철의 제련: Fe₂O₃+3CO → 2Fe+3CO₂\n(다) 광합성: 6CO₂+6H₂O → C₆H₁₂O₆+6O₂\n(라) 세포호흡: C₆H₁₂O₆+6O₂ → 6CO₂+6H₂O" },
-  { id:"q3", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
+  { id:"q3", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"화석 연료의 연소에서 연료는 산화된다.",
     note:"(가) 화석 연료의 연소: CH₄+2O₂ → CO₂+H₂O\n(나) 철의 제련: Fe₂O₃+3CO → 2Fe+3CO₂\n(다) 광합성: 6CO₂+6H₂O → C₆H₁₂O₆+6O₂\n(라) 세포호흡: C₆H₁₂O₆+6O₂ → 6CO₂+6H₂O" },
-  { id:"q4", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
+  { id:"q4", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"철의 제련에서 산화 철은 철로 환원된다.",
     note:"(가) 화석 연료의 연소: CH₄+2O₂ → CO₂+H₂O\n(나) 철의 제련: Fe₂O₃+3CO → 2Fe+3CO₂\n(다) 광합성: 6CO₂+6H₂O → C₆H₁₂O₆+6O₂\n(라) 세포호흡: C₆H₁₂O₆+6O₂ → 6CO₂+6H₂O" },
-  { id:"q5", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
+  { id:"q5", page:12, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"산소를 잃는 반응과 얻는 반응은 동시에 일어난다.",
     note:"(가) 화석 연료의 연소: CH₄+2O₂ → CO₂+H₂O\n(나) 철의 제련: Fe₂O₃+3CO → 2Fe+3CO₂\n(다) 광합성: 6CO₂+6H₂O → C₆H₁₂O₆+6O₂\n(라) 세포호흡: C₆H₁₂O₆+6O₂ → 6CO₂+6H₂O" },
 
@@ -856,24 +940,24 @@ const QUESTIONS = [
     text:"철의 제련에 대한 설명으로 옳은 것은?",
     note:"① 철의 제련 과정에 산소가 관여한다.\n② 철의 제련 과정에서 철이 산화 철로 변한다.\n③ 인류는 제련한 철을 이용하며 청동기 시대를 열었다.\n④ 자연 상태에서 철은 이산화 탄소와 결합한 형태로 존재한다.\n⑤ 자연 상태에서 얻은 철을 산업, 건축 등에 그대로 사용할 수 있다." },
 
-  { id:"q8", page:15, type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"③", tag:"확인문제",
-    text:"그림 (가)는 구리판을 알코올램프의 겉불꽃에 넣어 가열한 모습, (나)는 가열한 구리판을 속불꽃에 넣어 가열한 모습이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
-    image:"images/copper-ab.png",
-    note:"<보기>\nㄱ. (가)에서 구리는 산화된다.\nㄴ. (나)에서 산화 구리(Ⅱ)는 환원된다.\nㄷ. (나)에서 산소를 얻는 물질은 산화 구리(Ⅱ)이다.\n\n① ㄱ   ② ㄷ   ③ ㄱ,ㄴ   ④ ㄴ,ㄷ   ⑤ ㄱ,ㄴ,ㄷ" },
-
-  { id:"q9", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
-    text:"그림 (가)는 마그네슘 리본을 공기 중에서 연소시키는 것을, (나)는 마그네슘 가루를 드라이아이스 통에 넣고 연소시키는 것을 나타낸 것이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.\n\n(가)에서 마그네슘은 산화되었다.",
+  { id:"q9", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"그림 (가)는 마그네슘 리본을 공기 중에서 연소시키는 것을, (나)는 마그네슘 가루를 드라이아이스 통에 넣고 연소시키는 것을 나타낸 것이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
+    text:"(가)에서 마그네슘은 산화되었다.",
     image:"images/mg-ribbon.png" },
-  { id:"q10", page:15, type:"choice", options:["O","X"], correctAnswer:"X", tag:"스스로 확인하기",
+  { id:"q10", page:15, type:"choice", options:["O","X"], correctAnswer:"X", tag:"깨알 개념 체크 문제",
+    guideText:"그림 (가)는 마그네슘 리본을 공기 중에서 연소시키는 것을, (나)는 마그네슘 가루를 드라이아이스 통에 넣고 연소시키는 것을 나타낸 것이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"(나)에서 마그네슘은 환원, 드라이아이스는 산화되었다.",
     image:"images/mg-ribbon.png" },
-  { id:"q11", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
+  { id:"q11", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"그림 (가)는 마그네슘 리본을 공기 중에서 연소시키는 것을, (나)는 마그네슘 가루를 드라이아이스 통에 넣고 연소시키는 것을 나타낸 것이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"(나)에서 산소는 드라이아이스에서 마그네슘으로 이동하였다.",
     image:"images/mg-ribbon.png" },
-  { id:"q12", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
+  { id:"q12", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"그림 (가)는 마그네슘 리본을 공기 중에서 연소시키는 것을, (나)는 마그네슘 가루를 드라이아이스 통에 넣고 연소시키는 것을 나타낸 것이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"(가)의 반응은 2Mg+O₂ → 2MgO이다.",
     image:"images/mg-ribbon.png" },
-  { id:"q13", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
+  { id:"q13", page:15, type:"choice", options:["O","X"], correctAnswer:"O", tag:"깨알 개념 체크 문제",
+    guideText:"그림 (가)는 마그네슘 리본을 공기 중에서 연소시키는 것을, (나)는 마그네슘 가루를 드라이아이스 통에 넣고 연소시키는 것을 나타낸 것이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.",
     text:"(나)의 반응은 2Mg+CO₂ → 2MgO+C이다.",
     image:"images/mg-ribbon.png" },
 
@@ -883,6 +967,11 @@ const QUESTIONS = [
   { id:"q15", page:15, type:"blank", correctAnswer:"㉠ 환원, ㉡ 산화", tag:"확인문제",
     text:"다음은 산화·환원 반응의 화학 반응식을 나타낸 것이다. 산화 또는 환원 중에서 ㉠, ㉡에 들어갈 알맞은 말을 쓰시오. (예: ㉠ 산화, ㉡ 환원)",
     image:"images/equation-fe.png" },
+
+  { id:"q8", page:15, type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"③", tag:"확인문제",
+    text:"그림 (가)는 구리판을 알코올램프의 겉불꽃에 넣어 가열한 모습, (나)는 가열한 구리판을 속불꽃에 넣어 가열한 모습이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
+    image:"images/copper-ab.png",
+    note:"<보기>\nㄱ. (가)에서 구리는 산화된다.\nㄴ. (나)에서 산화 구리(Ⅱ)는 환원된다.\nㄷ. (나)에서 산소를 얻는 물질은 산화 구리(Ⅱ)이다.\n\n① ㄱ   ② ㄷ   ③ ㄱ,ㄴ   ④ ㄴ,ㄷ   ⑤ ㄱ,ㄴ,ㄷ" },
 
   { id:"q16", page:16, type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"⑤", tag:"기출 문제",
     text:"2020년 3월 학평 5번 화학Ⅰ",
@@ -923,7 +1012,11 @@ const TEACHER_ITEMS = QUESTIONS.concat(REFLECT_QUESTIONS.map((text, i)=>({
      따로 기존 레이아웃을 쓰는 불일치를 막는다).
 */
 const SPLIT_TAG_SET = (function(){
-  const forced = new Set(["깨알 개념 체크 문제"]);
+  // tag 문자열을 미리 강제하지 않고, 아래 byTag 루프의 내용 기반 판정(반응식 나열
+  // note가 있는지)에만 맡긴다 — "깨알 개념 체크 문제" tag를 마그네슘 계열(q9~13, note
+  // 없이 image만 있음)도 함께 쓰게 되면서, tag 이름만으로 강제하면 반응식 나열이 없는
+  // 마그네슘 문항까지 잘못 분할 레이아웃으로 끌려가기 때문이다.
+  const forced = new Set();
   const byTag = new Map();
   QUESTIONS.forEach(q=>{
     if(!q.tag) return;
@@ -1069,6 +1162,8 @@ function renderQuestion(){
   renderTagBadge(document.getElementById("q-tag"), q.tag);
   renderPageLabel(document.getElementById("q-page"), q.page);
   document.getElementById("q-num").textContent = (state.current+1)+" / "+QUESTIONS.length;
+  const qGuideEl = document.getElementById("q-guide");
+  if(q.guideText){ qGuideEl.textContent = q.guideText; qGuideEl.classList.remove("hidden"); } else qGuideEl.classList.add("hidden");
   document.getElementById("q-text").textContent = q.text;
 
   const noteEl = document.getElementById("q-note");
@@ -1370,6 +1465,7 @@ function selectTeacherClass(cls){
   switchTeacherTab("progress");
   renderTeacherDashboard();
   refreshGateButton();
+  refreshProblemStopButton();
 }
 document.getElementById("btn-change-class").addEventListener("click", ()=>{
   document.getElementById("teacher-main").classList.add("hidden");
@@ -1440,6 +1536,71 @@ gateBtn.addEventListener("click", ()=>{
   setGate(false);
 });
 
+/* ---------- "문제풀기 시작!" / "문제풀기 그만!" 토글 (전체 공통, 반과 무관) ---------- */
+// 접속 게이트와 똑같은 패턴: 기본은 진행 중, 정지는 두 번 눌러야 하고(실수 방지),
+// 정지된 상태를 다시 시작할 때는 접속 게이트가 "열기"를 한 번에 여는 것과 동일하게
+// 확인 단계 없이 바로 되돌아간다. 상태는 서버(구글시트 "문제풀이상태" 탭)의 공통 값.
+let problemStopped = false;
+let psConfirmArmed = false, psConfirmTimer = null;
+const psBtn = document.getElementById("btn-problemstop-toggle");
+
+function paintProblemStopButton(){
+  psBtn.classList.remove("state-running","state-confirm","state-stopped");
+  if(psConfirmArmed){
+    psBtn.classList.add("state-confirm");
+    psBtn.textContent = "문제풀이 그만할까요?";
+  } else if(problemStopped){
+    psBtn.classList.add("state-stopped");
+    psBtn.textContent = "문제풀기 그만!";
+  } else {
+    psBtn.classList.add("state-running");
+    psBtn.textContent = "문제풀기 시작!";
+  }
+}
+async function refreshProblemStopButton(){
+  if(!gasConfigured()) return;
+  try{
+    const res = await fetch(GAS_URL + "?action=problemStopStatus", { method:"GET" });
+    const data = await res.json();
+    problemStopped = !!(data && data.stopped);
+  }catch(e){ /* 조용히 넘어가고 다음 새로고침 때 다시 시도 */ }
+  psConfirmArmed = false;
+  clearTimeout(psConfirmTimer);
+  paintProblemStopButton();
+}
+async function setProblemStop(stopped){
+  psBtn.disabled = true;
+  try{
+    if(gasConfigured()){
+      const res = await fetch(GAS_URL + "?action=setProblemStop&value=" + (stopped ? "true" : "false"), { method:"GET" });
+      const data = await res.json();
+      problemStopped = !!(data && data.stopped);
+    }
+  }catch(e){ /* 실패하면 다음 조작 때 refreshProblemStopButton으로 실제 상태를 다시 반영 */ }
+  psBtn.disabled = false;
+  psConfirmArmed = false;
+  clearTimeout(psConfirmTimer);
+  paintProblemStopButton();
+}
+psBtn.addEventListener("click", ()=>{
+  if(problemStopped){
+    // 정지된 상태 → 확인 없이 바로 재시작.
+    setProblemStop(false);
+    return;
+  }
+  if(!psConfirmArmed){
+    // 진행 중 → 첫 클릭은 확인 단계로만 진입 (아직 정지하지 않음).
+    psConfirmArmed = true;
+    paintProblemStopButton();
+    clearTimeout(psConfirmTimer);
+    psConfirmTimer = setTimeout(()=>{ psConfirmArmed = false; paintProblemStopButton(); }, 4000);
+    return;
+  }
+  // 확인 단계에서 다시 클릭 → 실제로 정지한다.
+  clearTimeout(psConfirmTimer);
+  setProblemStop(true);
+});
+
 /* ---------- 탭 전환 ---------- */
 let teacherTab = "progress";
 let tqIndex = 0; // 문항별 결과에서 현재 보고 있는 문항 인덱스
@@ -1472,6 +1633,7 @@ document.getElementById("tab-results").addEventListener("click", ()=>switchTeach
 document.getElementById("btn-teacher-refresh").addEventListener("click", ()=>{
   renderTeacherDashboard();
   refreshGateButton();
+  refreshProblemStopButton();
 });
 
 let resetArmed = false, resetArmTimer = null;
