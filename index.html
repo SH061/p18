@@ -95,6 +95,7 @@
   .q-image{ width:100%; border-radius:12px; margin:14px 0; background:#fff; padding:8px; }
   .q-image.q-image-small{ width:96%; margin-left:auto; margin-right:auto; display:block; }
   .q-text{ font-size:17px; line-height:1.6; white-space:pre-wrap; }
+  .q-text.exam-source{ font-weight:800; color:var(--text); }
   .q-note{
     margin-top:12px; padding:12px 14px; border-radius:10px; background:var(--panel);
     border:1px solid var(--line); font-size:14.5px; line-height:1.6; white-space:pre-line; color:var(--muted);
@@ -284,11 +285,17 @@
   #gate-message{ color:var(--muted); font-size:16px; }
 
   .chem-formula{
-    display:inline-block;
+    display:inline;
     font-weight:800;
     font-size:1.08em;
     letter-spacing:.2px;
     color:var(--text);
+    white-space:normal;
+  }
+  .chem-formula .chem-side{ display:inline-block; white-space:nowrap; }
+  .chem-formula .chem-arrow{ display:inline-block; padding:0 .15em; }
+  @media (max-width:420px){
+    .chem-formula{ font-size:.92em; }
   }
 </style>
 </head>
@@ -560,19 +567,19 @@ const TEACHER_PASSCODE = "3699";
 const QUESTIONS = [
   { id:"q1", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.\n\n모두 산소가 관여하는 산화 환원 반응이다.",
-    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\"><span class=\"chem-side\">CH<sub>4</sub>+2O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">CO<sub>2</sub>+H<sub>2</sub>O</span></span>\n(나) 철의 제련: <span class=\"chem-formula\"><span class=\"chem-side\">Fe<sub>2</sub>O<sub>3</sub>+3CO</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">2Fe+3CO<sub>2</sub></span></span>\n(다) 광합성: <span class=\"chem-formula\"><span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span></span>\n(라) 세포호흡: <span class=\"chem-formula\"><span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span></span>" },
   { id:"q2", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"광합성에서 이산화 탄소는 환원된다.",
-    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\"><span class=\"chem-side\">CH<sub>4</sub>+2O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">CO<sub>2</sub>+H<sub>2</sub>O</span></span>\n(나) 철의 제련: <span class=\"chem-formula\"><span class=\"chem-side\">Fe<sub>2</sub>O<sub>3</sub>+3CO</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">2Fe+3CO<sub>2</sub></span></span>\n(다) 광합성: <span class=\"chem-formula\"><span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span></span>\n(라) 세포호흡: <span class=\"chem-formula\"><span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span></span>" },
   { id:"q3", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"화석 연료의 연소에서 연료는 산화된다.",
-    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\"><span class=\"chem-side\">CH<sub>4</sub>+2O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">CO<sub>2</sub>+H<sub>2</sub>O</span></span>\n(나) 철의 제련: <span class=\"chem-formula\"><span class=\"chem-side\">Fe<sub>2</sub>O<sub>3</sub>+3CO</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">2Fe+3CO<sub>2</sub></span></span>\n(다) 광합성: <span class=\"chem-formula\"><span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span></span>\n(라) 세포호흡: <span class=\"chem-formula\"><span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span></span>" },
   { id:"q4", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"철의 제련에서 산화 철은 철로 환원된다.",
-    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\"><span class=\"chem-side\">CH<sub>4</sub>+2O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">CO<sub>2</sub>+H<sub>2</sub>O</span></span>\n(나) 철의 제련: <span class=\"chem-formula\"><span class=\"chem-side\">Fe<sub>2</sub>O<sub>3</sub>+3CO</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">2Fe+3CO<sub>2</sub></span></span>\n(다) 광합성: <span class=\"chem-formula\"><span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span></span>\n(라) 세포호흡: <span class=\"chem-formula\"><span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span></span>" },
   { id:"q5", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"산소를 잃는 반응과 얻는 반응은 동시에 일어난다.",
-    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\"><span class=\"chem-side\">CH<sub>4</sub>+2O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">CO<sub>2</sub>+H<sub>2</sub>O</span></span>\n(나) 철의 제련: <span class=\"chem-formula\"><span class=\"chem-side\">Fe<sub>2</sub>O<sub>3</sub>+3CO</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">2Fe+3CO<sub>2</sub></span></span>\n(다) 광합성: <span class=\"chem-formula\"><span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span></span>\n(라) 세포호흡: <span class=\"chem-formula\"><span class=\"chem-side\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">6CO<sub>2</sub>+6H<sub>2</sub>O</span></span>" },
 
   { id:"q6", type:"blank", correctAnswer:"산소", tag:"확인문제",
     text:"( ) 안에 공통으로 들어갈 알맞은 기체의 이름을 쓰시오.",
@@ -596,10 +603,10 @@ const QUESTIONS = [
     text:"(나)에서 산소는 드라이아이스에서 마그네슘으로 이동하였다.",
     image:"images/mg-ribbon.png" },
   { id:"q12", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
-    text:"(가)의 반응은 <span class=\"chem-formula\">2Mg+O<sub>2</sub> → 2MgO</span>이다.",
+    text:"(가)의 반응은 <span class=\"chem-formula\"><span class=\"chem-side\">2Mg+O<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">2MgO</span></span>이다.",
     image:"images/mg-ribbon.png" },
   { id:"q13", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
-    text:"(나)의 반응은 <span class=\"chem-formula\">2Mg+CO<sub>2</sub> → 2MgO+C</span>이다.",
+    text:"(나)의 반응은 <span class=\"chem-formula\"><span class=\"chem-side\">2Mg+CO<sub>2</sub></span> <span class=\"chem-arrow\">→</span> <span class=\"chem-side\">2MgO+C</span></span>이다.",
     image:"images/mg-ribbon.png" },
 
   { id:"q14", type:"blank", correctAnswer:"㉠ 산화, ㉡ 환원", tag:"확인문제",
@@ -670,6 +677,7 @@ function showScreen(name){
 function renderTagBadge(el, tag){
   el.className = "qtag";
   el.innerHTML = "";
+  el.removeAttribute("style");
   if(tag === "스스로 확인하기"){
     const img = document.createElement("img");
     img.src = "images/tag-selfcheck.png";
@@ -678,9 +686,9 @@ function renderTagBadge(el, tag){
     el.appendChild(img);
   } else if(tag === "성찰 질문"){
     el.classList.add("tag-reflect"); el.textContent = "성찰 질문";
-  } else if(tag === "확인문제"){
+  } else if(tag && tag.indexOf("확인문제") === 0){
     el.classList.add("tag-confirm"); el.textContent = "확인 문제";
-  } else if(tag === "기출 문제"){
+  } else if(tag && tag.indexOf("기출문제") === 0 || tag === "기출 문제"){
     el.classList.add("tag-pill","tag-pastexam"); el.textContent = "기출 문제";
   } else if(tag === "수능대비문제"){
     el.classList.add("tag-pill","tag-suneung"); el.textContent = "수능대비문제";
@@ -704,7 +712,9 @@ function renderQuestion(){
 
   document.getElementById("q-progress-label").textContent = "문항 " + (state.qIndex+1) + " / " + TOTAL_Q;
   document.getElementById("q-progress-fill").style.width = Math.round(((state.qIndex)/TOTAL_Q)*100) + "%";
-  document.getElementById("q-text").innerHTML = q.text;
+  const qTextEl = document.getElementById("q-text");
+  qTextEl.innerHTML = q.text;
+  qTextEl.classList.toggle("exam-source", q.tag === "기출 문제" || (q.tag && q.tag.indexOf("기출문제") === 0));
 
   const imgEl = document.getElementById("q-image");
   if(q.image){
