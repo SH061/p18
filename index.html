@@ -934,7 +934,12 @@ const SPLIT_TAG_SET = (function(){
     // 기존 판정 기준(note와 image가 함께 있으면 분할)을 tag 단위로 넓혀서, 같은 tag
     // 안의 문항 하나라도 이 조건을 만족하면 tag 전체를 분할 레이아웃으로 통일한다.
     // (image만 있고 note가 없는 "확인문제"/"기출문제" 같은 tag는 그대로 기존 레이아웃 유지)
-    if(list.some(item => item.image && item.note)) forced.add(tag);
+    // "깨알 개념 체크 문제"라는 tag 문자열 자체가 아니라, note에 (가)(나)(다)(라) 식
+    // 반응식 나열(참고자료 역할)이 있으면 tag 이름과 무관하게 분할 레이아웃으로 통일한다
+    // — 활동마다 이 계열 문항의 tag 이름이 "깨알 개념 체크 문제"/"스스로 확인하기"처럼
+    // 다를 수 있기 때문(문항 데이터는 그대로 두고 판정 로직만 내용 기반으로 일반화).
+    const hasReactionListNote = item => item.note && /\(가\)|\(나\)|\(다\)|\(라\)/.test(item.note);
+    if(list.some(item => (item.image && item.note) || hasReactionListNote(item))) forced.add(tag);
   });
   return forced;
 })();
