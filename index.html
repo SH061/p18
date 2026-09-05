@@ -217,9 +217,11 @@
      재사용한다. 기본(진행 중)은 은은한 초록, 확인 대기는 진한 빨강, 정지 상태는
      눈에 띄는 빨강 계열로 접속 게이트의 state-closed와 같은 톤을 쓴다. */
   .ps-btn{ font-weight:800; padding:8px 14px; font-size:12.5px; white-space:nowrap; }
-  .ps-btn.state-running{ background:var(--accent-dim); color:var(--accent); border-color:var(--accent); }
-  .ps-btn.state-confirm{ background:rgba(213,86,107,.35); color:var(--bad); border-color:var(--bad); }
-  .ps-btn.state-stopped{ background:rgba(213,86,107,.16); color:var(--bad); border-color:rgba(213,86,107,.4); }
+  /* 세 상태가 눈에 띄게 다른 색으로 — 진행 중(초록, 안심) / 확인 대기(주황, 주의)
+     / 정지됨(빨강, 경고)으로 채도를 뚜렷이 구분해서 지금 상태를 한눈에 알 수 있게 함. */
+  .ps-btn.state-running{ background:rgba(93,184,114,.16); color:#3f7d54; border-color:rgba(93,184,114,.5); }
+  .ps-btn.state-confirm{ background:rgba(212,160,23,.28); color:#9c7a0e; border-color:rgba(212,160,23,.55); }
+  .ps-btn.state-stopped{ background:rgba(213,86,107,.35); color:var(--bad); border-color:var(--bad); }
   .class-label{ font-size:12.5px; color:var(--muted); white-space:nowrap; }
   .teacher-topbar .btn{ padding:8px 13px; font-size:12.5px; white-space:nowrap; }
   /* "방금 갱신함" 문구를 상단 바 오른쪽 끝이 아니라 "새로고침" 버튼 바로 아래
