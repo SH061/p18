@@ -282,6 +282,14 @@
   }
   #gate-overlay.hidden{ display:none; }
   #gate-message{ color:var(--muted); font-size:16px; }
+
+  .chem-formula{
+    display:inline-block;
+    font-weight:800;
+    font-size:1.08em;
+    letter-spacing:.2px;
+    color:var(--text);
+  }
 </style>
 </head>
 <body>
@@ -552,19 +560,19 @@ const TEACHER_PASSCODE = "3699";
 const QUESTIONS = [
   { id:"q1", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"다음은 지구와 생명의 역사에 영향을 준 반응이다.\n이에 대한 설명으로 옳으면 O, 옳지 않으면 X를 고르세요.\n\n모두 산소가 관여하는 산화 환원 반응이다.",
-    note:"(가) 화석 연료의 연소: CH4+2O2 → CO2+H2O\n(나) 철의 제련: Fe2O3+3CO → 2Fe+3CO2\n(다) 광합성: 6CO2+6H2O → C6H12O6+6O2\n(라) 세포호흡: C6H12O6+6O2 → 6CO2+6H2O" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
   { id:"q2", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"광합성에서 이산화 탄소는 환원된다.",
-    note:"(가) 화석 연료의 연소: CH4+2O2 → CO2+H2O\n(나) 철의 제련: Fe2O3+3CO → 2Fe+3CO2\n(다) 광합성: 6CO2+6H2O → C6H12O6+6O2\n(라) 세포호흡: C6H12O6+6O2 → 6CO2+6H2O" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
   { id:"q3", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"화석 연료의 연소에서 연료는 산화된다.",
-    note:"(가) 화석 연료의 연소: CH4+2O2 → CO2+H2O\n(나) 철의 제련: Fe2O3+3CO → 2Fe+3CO2\n(다) 광합성: 6CO2+6H2O → C6H12O6+6O2\n(라) 세포호흡: C6H12O6+6O2 → 6CO2+6H2O" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
   { id:"q4", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"철의 제련에서 산화 철은 철로 환원된다.",
-    note:"(가) 화석 연료의 연소: CH4+2O2 → CO2+H2O\n(나) 철의 제련: Fe2O3+3CO → 2Fe+3CO2\n(다) 광합성: 6CO2+6H2O → C6H12O6+6O2\n(라) 세포호흡: C6H12O6+6O2 → 6CO2+6H2O" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
   { id:"q5", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
     text:"산소를 잃는 반응과 얻는 반응은 동시에 일어난다.",
-    note:"(가) 화석 연료의 연소: CH4+2O2 → CO2+H2O\n(나) 철의 제련: Fe2O3+3CO → 2Fe+3CO2\n(다) 광합성: 6CO2+6H2O → C6H12O6+6O2\n(라) 세포호흡: C6H12O6+6O2 → 6CO2+6H2O" },
+    note:"(가) 화석 연료의 연소: <span class=\"chem-formula\">CH<sub>4</sub>+2O<sub>2</sub> → CO<sub>2</sub>+H<sub>2</sub>O</span>\n(나) 철의 제련: <span class=\"chem-formula\">Fe<sub>2</sub>O<sub>3</sub>+3CO → 2Fe+3CO<sub>2</sub></span>\n(다) 광합성: <span class=\"chem-formula\">6CO<sub>2</sub>+6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub></span>\n(라) 세포호흡: <span class=\"chem-formula\">C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>+6O<sub>2</sub> → 6CO<sub>2</sub>+6H<sub>2</sub>O</span>" },
 
   { id:"q6", type:"blank", correctAnswer:"산소", tag:"확인문제",
     text:"( ) 안에 공통으로 들어갈 알맞은 기체의 이름을 쓰시오.",
@@ -572,15 +580,6 @@ const QUESTIONS = [
   { id:"q7", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"①", tag:"확인문제",
     text:"철의 제련에 대한 설명으로 옳은 것은?",
     note:"① 철의 제련 과정에 산소가 관여한다.\n② 철의 제련 과정에서 철이 산화 철로 변한다.\n③ 인류는 제련한 철을 이용하며 청동기 시대를 열었다.\n④ 자연 상태에서 철은 이산화 탄소와 결합한 형태로 존재한다.\n⑤ 자연 상태에서 얻은 철을 산업, 건축 등에 그대로 사용할 수 있다." },
-
-  { id:"q7a", type:"short", correctAnswer:"", tag:"확인문제",
-    text:"다음 (가), (나)는 구리판을 알코올램프의 불꽃에 넣어 가열하는 실험이다.\n(가)와 (나)에서 불꽃에 닿은 부분의 변화를 관찰한 내용을 서술하시오.",
-    image:"images/copper-ab.png",
-    sampleAnswer:"(가)에서 붉은색의 구리판이 검은색으로 변하고, (나)에서 검은색으로 변한 구리판이 다시 붉은색으로 변한다." },
-  { id:"q7b", type:"short", correctAnswer:"", tag:"확인문제",
-    text:"알코올램프의 겉불꽃과 속불꽃은 각각 다른 특징이 있다. 과정 1에서 관찰한 변화가 나타나는 까닭을 겉불꽃 또는 속불꽃의 특징과 관련지어 서술하시오.",
-    image:"images/copper-ab.png",
-    sampleAnswer:"· (가): 겉불꽃은 산소가 잘 공급되므로 구리가 산소와 반응한다. 따라서 구리가 산소를 얻어 산화되어 산화 구리(Ⅱ)로 변한다.\n· (나): 속불꽃에 존재하는 일산화 탄소(또는 탄소)는 산소를 얻으려는 경향이 있다. 따라서 산화 구리(Ⅱ)가 산소를 잃어 환원되어 구리로 변하고, 일산화 탄소(또는 탄소)가 산소를 얻어 산화되어 이산화 탄소로 변한다." },
 
   { id:"q8", type:"choice", options:["①","②","③","④","⑤"], correctAnswer:"③", tag:"확인문제",
     text:"그림 (가)는 구리판을 알코올램프의 겉불꽃에 넣어 가열한 모습, (나)는 가열한 구리판을 속불꽃에 넣어 가열한 모습이다. 이에 대한 설명으로 옳은 것만을 <보기>에서 있는 대로 고른 것은?",
@@ -597,10 +596,10 @@ const QUESTIONS = [
     text:"(나)에서 산소는 드라이아이스에서 마그네슘으로 이동하였다.",
     image:"images/mg-ribbon.png" },
   { id:"q12", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
-    text:"(가)의 반응은 2Mg+O2 → 2MgO이다.",
+    text:"(가)의 반응은 <span class=\"chem-formula\">2Mg+O<sub>2</sub> → 2MgO</span>이다.",
     image:"images/mg-ribbon.png" },
   { id:"q13", type:"choice", options:["O","X"], correctAnswer:"O", tag:"스스로 확인하기",
-    text:"(나)의 반응은 2Mg+CO2 → 2MgO+C이다.",
+    text:"(나)의 반응은 <span class=\"chem-formula\">2Mg+CO<sub>2</sub> → 2MgO+C</span>이다.",
     image:"images/mg-ribbon.png" },
 
   { id:"q14", type:"blank", correctAnswer:"㉠ 산화, ㉡ 환원", tag:"확인문제",
@@ -705,7 +704,7 @@ function renderQuestion(){
 
   document.getElementById("q-progress-label").textContent = "문항 " + (state.qIndex+1) + " / " + TOTAL_Q;
   document.getElementById("q-progress-fill").style.width = Math.round(((state.qIndex)/TOTAL_Q)*100) + "%";
-  document.getElementById("q-text").textContent = q.text;
+  document.getElementById("q-text").innerHTML = q.text;
 
   const imgEl = document.getElementById("q-image");
   if(q.image){
@@ -716,7 +715,7 @@ function renderQuestion(){
   else{ imgEl.classList.add("hidden"); imgEl.removeAttribute("src"); }
 
   const noteEl = document.getElementById("q-note");
-  if(q.note){ noteEl.textContent = q.note; noteEl.classList.remove("hidden"); }
+  if(q.note){ noteEl.innerHTML = q.note; noteEl.classList.remove("hidden"); }
   else{ noteEl.classList.add("hidden"); }
 
   const optWrap = document.getElementById("q-options");
@@ -1243,7 +1242,7 @@ function renderTeacherQuestion(){
   document.getElementById("tq-label").textContent = "문항 " + (tqIndex+1) + " / " + TOTAL_ALL;
   const isQuestion = tqIndex < TOTAL_Q;
   const qData = isQuestion ? QUESTIONS[tqIndex] : null;
-  document.getElementById("tq-text").textContent = isQuestion ? qData.text : REFLECTIONS[tqIndex - TOTAL_Q];
+  document.getElementById("tq-text").innerHTML = isQuestion ? qData.text : REFLECTIONS[tqIndex - TOTAL_Q];
   const imgEl = document.getElementById("tq-image");
   if(isQuestion && qData.image){
     imgEl.src = qData.image;
@@ -1252,7 +1251,7 @@ function renderTeacherQuestion(){
   }
   else{ imgEl.classList.add("hidden"); imgEl.removeAttribute("src"); }
   const noteEl = document.getElementById("tq-note");
-  if(isQuestion && qData.note){ noteEl.textContent = qData.note; noteEl.classList.remove("hidden"); }
+  if(isQuestion && qData.note){ noteEl.innerHTML = qData.note; noteEl.classList.remove("hidden"); }
   else{ noteEl.classList.add("hidden"); }
 
   const area = document.getElementById("tq-result-area");
